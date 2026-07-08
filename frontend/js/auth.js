@@ -1,0 +1,1 @@
+// Placeholder — will handle login state, navbar updates in Step 8
