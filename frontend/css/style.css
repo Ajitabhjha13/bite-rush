@@ -29,3 +29,53 @@ body {
 .btn-warning {
   color: #1a1a1a !important;
 }
+/* Menu Cards */
+.menu-card {
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+}
+
+.menu-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+
+.menu-card img {
+  height: 180px;
+  object-fit: cover;
+}
+
+.category-btn {
+  cursor: pointer;
+  border-radius: 30px !important;
+}
+
+/* Floating Cart Button */
+.floating-cart-btn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 60px;
+  height: 60px;
+  z-index: 1030;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cart Item Row */
+.cart-item-row {
+  border-bottom: 1px solid #eee;
+  padding: 12px 0;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 1;
+}
