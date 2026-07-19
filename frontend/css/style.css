@@ -79,3 +79,62 @@ body {
   padding: 0;
   line-height: 1;
 }
+
+/* Order Status Tracker */
+.status-tracker {
+  position: relative;
+}
+
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  color: #bbb;
+  font-size: 0.8rem;
+  font-weight: 600;
+  position: relative;
+}
+
+.status-step i {
+  font-size: 1.4rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f1f1f1;
+  color: #bbb;
+}
+
+.status-step.active i,
+.status-step.completed i {
+  background: #ffc107;
+  color: #1a1a1a;
+}
+
+.status-step.active,
+.status-step.completed {
+  color: #1a1a1a;
+}
+
+/* Order History Cards */
+.order-history-card {
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.status-Received { background: #e3f2fd; color: #1565c0; }
+.status-Preparing { background: #fff3e0; color: #e65100; }
+.status-Ready { background: #e8f5e9; color: #2e7d32; }
+.status-Delivered { background: #f1f8e9; color: #558b2f; }
