@@ -138,3 +138,32 @@ body {
 .status-Preparing { background: #fff3e0; color: #e65100; }
 .status-Ready { background: #e8f5e9; color: #2e7d32; }
 .status-Delivered { background: #f1f8e9; color: #558b2f; }
+
+/* Admin Dashboard */
+.admin-sidebar {
+  width: 220px;
+  min-height: calc(100vh - 56px);
+}
+
+.admin-nav-btn {
+  color: #ccc;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.admin-nav-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+.admin-nav-btn.active {
+  background: #ffc107;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.admin-status-select {
+  min-width: 130px;
+}
