@@ -126,5 +126,68 @@ async function loadPopularDishes() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadHomeCategories();
+  loadCombos();
   loadPopularDishes();
 });
+
+async function loadCombos() {
+  const grid = document.getElementById('comboGrid');
+  if (!grid) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/combos`);
+    const combos = await res.json();
+
+    if (combos.length === 0) {
+      grid.parentElement.parentElement.classList.add('d-none'); // hide the whole section if no combos exist yet
+      return;
+    }
+
+    grid.innerHTML = combos.map((combo) => `
+      <div class="col-sm-6 col-lg-4">
+        <div class="card menu-card combo-card h-100">
+          <img src="${combo.image_url || 'https://placehold.co/400x220/f1f1f1/999999?text=Combo'}" alt="${combo.name}" onerror="this.onerror=null; this.src='https://placehold.co/400x220/f1f1f1/999999?text=Combo';">
+          ${combo.savings > 0 ? `<span class="combo-savings-badge">Save ₹${combo.savings}</span>` : ''}
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title fw-semibold">${combo.name}</h5>
+            <p class="combo-items-list mb-2">${combo.items.map((i) => i.name).join(' + ')}</p>
+            <p class="card-text text-muted small flex-grow-1">${combo.description || ''}</p>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <span>
+                ${combo.savings > 0 ? `<span class="combo-original-price">₹${combo.original_price}</span>` : ''}
+                <span class="fw-bold fs-5">₹${combo.combo_price}</span>
+              </span>
+              <button class="btn btn-warning btn-sm fw-semibold add-combo-btn"
+                data-id="${combo._id}"
+                data-name="${combo.name}"
+                data-price="${combo.combo_price}"
+                data-image="${combo.image_url || ''}">
+                <i class="bi bi-plus-circle"></i> Add Combo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.add-combo-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        addToCart({
+          id: btn.dataset.id,
+          name: btn.dataset.name,
+          price: parseFloat(btn.dataset.price),
+          image_url: btn.dataset.image,
+          type: 'combo'
+        });
+
+        if (typeof showToast === 'function') {
+          showToast(`${btn.dataset.name} added to cart!`, 'success');
+        }
+      });
+    });
+
+  } catch (error) {
+    console.error('Failed to load combos:', error);
+    grid.parentElement.parentElement.classList.add('d-none'); // hide section gracefully on error
+  }
+}

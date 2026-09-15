@@ -492,6 +492,36 @@ h1, h2, h3, .navbar-brand, .brand-font {
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
+/* Combo Meal Cards */
+.combo-card {
+  border: 2px solid var(--color-gold);
+}
+
+.combo-savings-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #1F7A3D;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.combo-original-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.85rem;
+  margin-right: 6px;
+}
+
+.combo-items-list {
+  font-size: 0.78rem;
+  color: #888;
+}
+
 .password-field-wrapper .form-control.is-invalid,
 .password-field-wrapper .form-control.is-valid {
   background-image: none !important;

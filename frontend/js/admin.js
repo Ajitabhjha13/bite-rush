@@ -30,6 +30,10 @@ function setupTabs() {
       if (btn.dataset.tab === 'menu') {
         loadMenuItemsAdmin();
       }
+
+      if (btn.dataset.tab === 'combos') {
+        loadCombosAdmin();
+      }
     });
   });
 }
@@ -64,7 +68,10 @@ async function loadOrders(isInitialLoad = false) {
       <tr>
         <td class="fw-semibold">#${order._id.slice(-6).toUpperCase()}</td>
         <td>${order.user ? order.user.name : 'Unknown'}<br><span class="text-muted small">${order.user ? order.user.email : ''}</span></td>
-        <td class="small">${order.items.map((oi) => `${oi.item ? oi.item.name : 'Item'}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`).join(', ')}</td>
+        <td class="small">${order.items.map((oi) => {
+          const label = oi.combo ? `${oi.combo.name} (Combo)` : (oi.item ? oi.item.name : 'Item');
+          return `${label}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`;
+        }).join(', ')}</td>
         <td class="fw-semibold">₹${order.total_amount}</td>
         <td>
           <select class="form-select form-select-sm admin-status-select" data-order-id="${order._id}">
@@ -277,6 +284,193 @@ async function deleteMenuItemAdmin(itemId) {
   }
 }
 
+// ===== COMBO MANAGEMENT TAB =====
+let allMenuItemsForCombo = [];
+
+async function loadCombosAdmin() {
+  const tbody = document.getElementById('comboTableBody');
+
+  tbody.innerHTML = `
+    <tr><td colspan="6" class="text-center py-4">
+      <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
+      <span class="text-muted ms-2">Loading combos...</span>
+    </td></tr>
+  `;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/combos/admin/all`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    const combos = await res.json();
+
+    if (!res.ok) throw new Error(combos.message || 'Failed to load combos');
+
+    if (combos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No combos yet — click "Add Combo" to create one.</td></tr>';
+      return;
+    }
+
+    window.currentCombos = combos;
+
+    tbody.innerHTML = combos.map((combo) => `
+      <tr>
+        <td><img src="${combo.image_url || 'https://placehold.co/50x50/f1f1f1/999999?text=%20'}" width="45" height="45" style="object-fit:cover; border-radius:6px;" onerror="this.onerror=null; this.src='https://placehold.co/50x50/f1f1f1/999999?text=%20';"></td>
+        <td class="fw-semibold">${combo.name}</td>
+        <td class="small text-muted">${combo.items.map((i) => i.name).join(', ')}</td>
+        <td>₹${combo.combo_price} <span class="text-muted small text-decoration-line-through">₹${combo.original_price}</span></td>
+        <td>${combo.is_available ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary edit-combo-btn" data-id="${combo._id}"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-danger delete-combo-btn" data-id="${combo._id}"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>
+    `).join('');
+
+    document.querySelectorAll('.edit-combo-btn').forEach((btn) => {
+      btn.addEventListener('click', () => openEditComboModal(btn.dataset.id));
+    });
+
+    document.querySelectorAll('.delete-combo-btn').forEach((btn) => {
+      btn.addEventListener('click', () => deleteComboAdmin(btn.dataset.id));
+    });
+
+  } catch (error) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${error.message}</td></tr>`;
+  }
+}
+
+async function loadMenuItemsChecklist(selectedIds = []) {
+  const container = document.getElementById('comboItemsChecklist');
+
+  try {
+    if (allMenuItemsForCombo.length === 0) {
+      const res = await fetch(`${API_BASE_URL}/menu`);
+      allMenuItemsForCombo = await res.json();
+    }
+
+    container.innerHTML = allMenuItemsForCombo.map((item) => `
+      <div class="form-check">
+        <input class="form-check-input combo-item-checkbox" type="checkbox" value="${item._id}" data-price="${item.price}" id="comboItem-${item._id}" ${selectedIds.includes(item._id) ? 'checked' : ''}>
+        <label class="form-check-label small" for="comboItem-${item._id}">${item.name} — ₹${item.price}</label>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.combo-item-checkbox').forEach((cb) => {
+      cb.addEventListener('change', updateComboOriginalPriceHint);
+    });
+
+    updateComboOriginalPriceHint();
+
+  } catch (error) {
+    container.innerHTML = '<p class="text-danger small mb-0">Failed to load menu items.</p>';
+  }
+}
+
+function updateComboOriginalPriceHint() {
+  const checked = document.querySelectorAll('.combo-item-checkbox:checked');
+  const total = Array.from(checked).reduce((sum, cb) => sum + parseFloat(cb.dataset.price), 0);
+  const hint = document.getElementById('comboOriginalPriceHint');
+  hint.textContent = checked.length > 0
+    ? `Selected items total: ₹${total} (set your combo price below this for it to show savings)`
+    : '';
+}
+
+function openEditComboModal(comboId) {
+  const combo = window.currentCombos.find((c) => c._id === comboId);
+  if (!combo) return;
+
+  document.getElementById('comboModalTitle').textContent = 'Edit Combo';
+  document.getElementById('comboId').value = combo._id;
+  document.getElementById('comboName').value = combo.name;
+  document.getElementById('comboDescription').value = combo.description || '';
+  document.getElementById('comboImage').value = combo.image_url || '';
+  document.getElementById('comboPrice').value = combo.combo_price;
+  document.getElementById('comboAvailable').checked = combo.is_available;
+
+  loadMenuItemsChecklist(combo.items.map((i) => i._id));
+
+  new bootstrap.Modal(document.getElementById('comboModal')).show();
+}
+
+function resetComboForm() {
+  document.getElementById('comboModalTitle').textContent = 'Add Combo';
+  document.getElementById('comboForm').reset();
+  document.getElementById('comboId').value = '';
+  document.getElementById('comboAvailable').checked = true;
+  document.getElementById('comboFormError').classList.add('d-none');
+  loadMenuItemsChecklist([]);
+}
+
+async function saveCombo() {
+  const id = document.getElementById('comboId').value;
+  const errorBox = document.getElementById('comboFormError');
+
+  const selectedItems = Array.from(document.querySelectorAll('.combo-item-checkbox:checked')).map((cb) => cb.value);
+
+  const payload = {
+    name: document.getElementById('comboName').value,
+    description: document.getElementById('comboDescription').value,
+    image_url: document.getElementById('comboImage').value,
+    items: selectedItems,
+    combo_price: parseFloat(document.getElementById('comboPrice').value),
+    is_available: document.getElementById('comboAvailable').checked
+  };
+
+  errorBox.classList.add('d-none');
+
+  if (selectedItems.length === 0) {
+    errorBox.textContent = 'Please select at least one item for the combo.';
+    errorBox.classList.remove('d-none');
+    return;
+  }
+
+  try {
+    const url = id ? `${API_BASE_URL}/combos/admin/${id}` : `${API_BASE_URL}/combos/admin`;
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to save combo');
+
+    bootstrap.Modal.getInstance(document.getElementById('comboModal')).hide();
+    loadCombosAdmin();
+    showToast(id ? 'Combo updated successfully' : 'Combo added successfully', 'success');
+
+  } catch (error) {
+    errorBox.textContent = error.message;
+    errorBox.classList.remove('d-none');
+  }
+}
+
+async function deleteComboAdmin(comboId) {
+  if (!confirm('Are you sure you want to delete this combo?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/combos/admin/${comboId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.message || 'Failed to delete combo');
+    }
+
+    loadCombosAdmin();
+    showToast('Combo deleted successfully', 'success');
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   updateAuthNav();
@@ -289,6 +483,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('addMenuItemBtn').addEventListener('click', resetMenuForm);
   document.getElementById('saveMenuItemBtn').addEventListener('click', saveMenuItem);
+
+  document.getElementById('addComboBtn').addEventListener('click', resetComboForm);
+  document.getElementById('saveComboBtn').addEventListener('click', saveCombo);
 
   autoRefreshInterval = setInterval(() => {
     const ordersTabVisible = !document.getElementById('ordersTab').classList.contains('d-none');

@@ -32,6 +32,9 @@
         <button class="btn admin-nav-btn text-start" data-tab="menu">
           <i class="bi bi-egg-fried"></i> Menu Management
         </button>
+        <button class="btn admin-nav-btn text-start" data-tab="combos">
+          <i class="bi bi-box-seam"></i> Combo Management
+        </button>
       </div>
     </div>
 
@@ -100,6 +103,33 @@
           </div>
         </div>
 
+        <!-- COMBO MANAGEMENT TAB -->
+        <div id="combosTab" class="admin-tab d-none">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0"><i class="bi bi-box-seam"></i> Combo Management</h3>
+            <button class="btn btn-warning fw-semibold" data-bs-toggle="modal" data-bs-target="#comboModal" id="addComboBtn">
+              <i class="bi bi-plus-circle"></i> Add Combo
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover bg-white align-middle shadow-sm rounded overflow-hidden">
+              <thead class="table-dark">
+                <tr>
+                  <th>Image</th>
+                  <th>Name</th>
+                  <th>Items Included</th>
+                  <th>Combo Price</th>
+                  <th>Available</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="comboTableBody">
+                <tr><td colspan="6" class="text-center py-4 text-muted">Loading combos...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -161,6 +191,56 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-warning fw-semibold" id="saveMenuItemBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Combo Modal -->
+  <div class="modal fade" id="comboModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="comboModalTitle">Add Combo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="comboForm">
+            <input type="hidden" id="comboId">
+            <div class="mb-3">
+              <label class="form-label">Combo Name</label>
+              <input type="text" class="form-control" id="comboName" required placeholder="e.g. Veg Feast Combo">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" id="comboDescription" rows="2" placeholder="e.g. A starter, a main course, and a sweet ending."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Image URL</label>
+              <input type="text" class="form-control" id="comboImage" placeholder="images/menu/... or https://...">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Select Items to Include</label>
+              <div id="comboItemsChecklist" class="border rounded p-2" style="max-height: 220px; overflow-y: auto;">
+                <p class="text-muted small mb-0">Loading menu items...</p>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Combo Price (₹)</label>
+              <input type="number" class="form-control" id="comboPrice" required min="0">
+              <div class="form-text">Original total (sum of selected items) is shown automatically once you pick items.</div>
+              <div id="comboOriginalPriceHint" class="small text-muted mt-1"></div>
+            </div>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="comboAvailable" checked>
+              <label class="form-check-label">Available</label>
+            </div>
+            <div id="comboFormError" class="alert alert-danger d-none mt-3"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-warning fw-semibold" id="saveComboBtn">Save</button>
         </div>
       </div>
     </div>

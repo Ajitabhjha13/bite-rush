@@ -51,7 +51,7 @@ function renderCheckoutPanel() {
 
   itemsList.innerHTML = cart.map((item) => `
     <div class="d-flex justify-content-between py-2 border-bottom">
-      <span>${item.name} ${item.spice_level ? `<span class="badge bg-light text-dark border">${item.spice_level}</span>` : ''} <span class="text-muted">x${item.quantity}</span></span>
+      <span>${item.name} ${item.type === 'combo' ? '<span class="badge bg-warning text-dark"><i class="bi bi-box-seam"></i> Combo</span>' : ''} ${item.spice_level ? `<span class="badge bg-light text-dark border">${item.spice_level}</span>` : ''} <span class="text-muted">x${item.quantity}</span></span>
       <span class="fw-semibold">₹${item.price * item.quantity}</span>
     </div>
   `).join('');
@@ -80,7 +80,9 @@ async function placeOrder() {
 
   try {
     const cart_items = cart.map((item) => ({
-      item_id: item.id,
+      type: item.type === 'combo' ? 'combo' : 'item',
+      item_id: item.type === 'combo' ? undefined : item.id,
+      combo_id: item.type === 'combo' ? item.id : undefined,
       quantity: item.quantity,
       spice_level: item.spice_level || undefined
     }));
@@ -123,6 +125,18 @@ function reorderPastOrder(orderId, orders) {
   if (!order) return;
 
   order.items.forEach((oi) => {
+    if (oi.combo) {
+      addToCart({
+        id: oi.combo._id,
+        name: oi.combo.name,
+        price: oi.unit_price,
+        image_url: oi.combo.image_url,
+        quantity: oi.quantity,
+        type: 'combo'
+      });
+      return;
+    }
+
     if (!oi.item) return; // menu item may have been deleted since
     addToCart({
       id: oi.item._id,
@@ -185,7 +199,10 @@ async function loadOrderHistory() {
             <div class="fw-bold fs-5">₹${order.total_amount}</div>
           </div>
           <div class="mt-2 small text-muted">
-            ${order.items.map((oi) => `${oi.item ? oi.item.name : 'Item'}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`).join(', ')}
+            ${order.items.map((oi) => {
+              const label = oi.combo ? `${oi.combo.name} (Combo)` : (oi.item ? oi.item.name : 'Item');
+              return `${label}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`;
+            }).join(', ')}
           </div>
           <div class="mt-3 d-flex gap-2">
             <button class="btn btn-outline-warning btn-sm order-again-btn" data-order-id="${order._id}">
