@@ -116,6 +116,8 @@ async function loadPopularDishes() {
         setTimeout(() => {
           btn.innerHTML = '<i class="bi bi-plus-circle"></i> Add';
         }, 800);
+
+        openCartSidebar();
       });
     });
   } catch (error) {
@@ -183,6 +185,8 @@ async function loadCombos() {
         if (typeof showToast === 'function') {
           showToast(`${btn.dataset.name} added to cart!`, 'success');
         }
+
+        openCartSidebar();
       });
     });
 
@@ -190,4 +194,15 @@ async function loadCombos() {
     console.error('Failed to load combos:', error);
     grid.parentElement.parentElement.classList.add('d-none'); // hide section gracefully on error
   }
+}
+
+// Opens the cart offcanvas — used so customers get instant visual confirmation
+// right after clicking "Add" on the homepage (popular dishes / combos), without
+// the sidebar being forced open at any other time.
+function openCartSidebar() {
+  const el = document.getElementById('cartOffcanvas');
+  if (!el || typeof bootstrap === 'undefined') return;
+
+  const instance = bootstrap.Offcanvas.getOrCreateInstance(el);
+  instance.show();
 }

@@ -31,7 +31,7 @@
           <li class="nav-item"><a class="nav-link" href="outlets.html">Outlets</a></li>
           <li class="nav-item"><a class="nav-link" href="order.html">My Orders</a></li>
           <li class="nav-item">
-            <a class="nav-link position-relative" href="menu.html#cart">
+            <a class="nav-link position-relative" href="#cartOffcanvas" data-bs-toggle="offcanvas" role="button">
               <i class="bi bi-cart3 fs-5"></i>
               <span id="cartCount" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-100 translate-middle" style="font-size:0.65rem;">0</span>
             </a>
@@ -273,6 +273,28 @@
       <p class="mb-0 text-muted small text-center">Designed & developed by <span class="text-white fw-semibold">Ajitabh Kumar Jha</span> as a full-stack learning project.</p>
     </div>
   </footer>
+
+  <!-- Cart Offcanvas Sidebar -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title fw-bold"><i class="bi bi-cart3"></i> Your Cart</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column">
+      <div id="cartItemsList" class="flex-grow-1">
+        <p class="text-muted text-center mt-4" id="emptyCartMsg">Your cart is empty. Add some delicious items!</p>
+      </div>
+      <div class="border-top pt-3 mt-3">
+        <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+          <span>Total:</span>
+          <span id="cartTotal">₹0</span>
+        </div>
+        <a href="order.html" class="btn btn-warning w-100 fw-semibold">
+          Proceed to Checkout <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

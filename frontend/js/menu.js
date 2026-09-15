@@ -66,12 +66,12 @@ function renderMenuItems(items, emptyMessage) {
 
   menuGrid.innerHTML = items.map((item) => `
     <div class="col-sm-6 col-lg-4 col-xl-3">
-      <div class="card menu-card" data-item-id="${item._id}" style="cursor:pointer;">
-        <img src="${item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image'}" alt="${item.name}" onerror="this.onerror=null; this.src='https://placehold.co/300x180/f1f1f1/999999?text=No+Image';">
+      <div class="card menu-card">
+        <img src="${item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image'}" alt="${item.name}" data-item-id="${item._id}" class="menu-card-img-clickable" style="cursor:pointer;" onerror="this.onerror=null; this.src='https://placehold.co/300x180/f1f1f1/999999?text=No+Image';">
         <span class="delivery-time-badge"><i class="bi bi-clock"></i> ${item.prep_time || '15-20 min'}</span>
         ${item.is_bestseller ? '<span class="bestseller-badge"><i class="bi bi-star-fill"></i> Bestseller</span>' : ''}
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title fw-semibold">
+          <h5 class="card-title fw-semibold menu-card-img-clickable" data-item-id="${item._id}" style="cursor:pointer;">
             <span class="veg-indicator ${item.is_veg !== false ? 'veg' : 'non-veg'}" title="${item.is_veg !== false ? 'Vegetarian' : 'Non-Vegetarian'}"></span>
             ${item.name}
             ${item.has_spice_level ? '<i class="bi bi-fire text-danger ms-1" title="Spice level available" style="font-size:0.8rem;"></i>' : ''}
@@ -92,18 +92,14 @@ function renderMenuItems(items, emptyMessage) {
   attachCardClickForDetail();
 }
 
-// Opens the Item Detail Modal for a clicked card (but not when the click
-// was on the Add/quantity controls — those stop propagation separately).
+// Opens the Item Detail Modal when the image or dish name is clicked.
+// The Add/quantity controls are a completely separate area of the card,
+// so no event bubbling tricks are needed to keep them independent.
 function attachCardClickForDetail() {
-  document.querySelectorAll('.menu-card').forEach((card) => {
-    card.addEventListener('click', () => {
-      openItemDetailModal(card.dataset.itemId);
+  document.querySelectorAll('.menu-card-img-clickable').forEach((el) => {
+    el.addEventListener('click', () => {
+      openItemDetailModal(el.dataset.itemId);
     });
-  });
-
-  // Prevent qty control clicks from bubbling up and re-triggering the modal
-  document.querySelectorAll('.qty-control-wrapper').forEach((wrapper) => {
-    wrapper.addEventListener('click', (e) => e.stopPropagation());
   });
 }
 
