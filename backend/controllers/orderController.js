@@ -1,48 +1,70 @@
 const Order = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
 const MenuItem = require('../models/MenuItem');
+const Combo = require('../models/Combo');
 
 // @route   POST /api/orders
 // @desc    Place a new order (customer)
 const placeOrder = async (req, res) => {
   try {
-    const { cart_items } = req.body; // [{ item_id, quantity }, ...]
+    const { cart_items } = req.body; // [{ type: 'item'|'combo', item_id/combo_id, quantity }, ...]
 
     if (!cart_items || cart_items.length === 0) {
       return res.status(400).json({ message: 'Cart is empty' });
     }
 
-    // Validate each item exists and calculate total
     let total = 0;
     const validatedItems = [];
 
     for (const cartItem of cart_items) {
-      const menuItem = await MenuItem.findById(cartItem.item_id);
-
-      if (!menuItem) {
-        return res.status(400).json({ message: `Menu item ${cartItem.item_id} not found` });
-      }
-
-      if (!menuItem.is_available) {
-        return res.status(400).json({ message: `${menuItem.name} is currently unavailable` });
-      }
-
       const quantity = cartItem.quantity || 1;
-      total += menuItem.price * quantity;
 
-      // Only store a spice level if the dish actually supports it — ignore
-      // anything sent for items that don't (defensive, matches server-side
-      // validation philosophy used elsewhere in this project).
-      const spiceLevel = menuItem.has_spice_level && cartItem.spice_level
-        ? cartItem.spice_level
-        : null;
+      if (cartItem.type === 'combo') {
+        const combo = await Combo.findById(cartItem.combo_id);
 
-      validatedItems.push({
-        item: menuItem._id,
-        quantity,
-        unit_price: menuItem.price,
-        spice_level: spiceLevel
-      });
+        if (!combo) {
+          return res.status(400).json({ message: `Combo ${cartItem.combo_id} not found` });
+        }
+
+        if (!combo.is_available) {
+          return res.status(400).json({ message: `${combo.name} is currently unavailable` });
+        }
+
+        total += combo.combo_price * quantity;
+
+        validatedItems.push({
+          combo: combo._id,
+          quantity,
+          unit_price: combo.combo_price
+        });
+
+      } else {
+        const menuItem = await MenuItem.findById(cartItem.item_id);
+
+        if (!menuItem) {
+          return res.status(400).json({ message: `Menu item ${cartItem.item_id} not found` });
+        }
+
+        if (!menuItem.is_available) {
+          return res.status(400).json({ message: `${menuItem.name} is currently unavailable` });
+        }
+
+        total += menuItem.price * quantity;
+
+        // Only store a spice level if the dish actually supports it — ignore
+        // anything sent for items that don't (defensive, matches server-side
+        // validation philosophy used elsewhere in this project).
+        const spiceLevel = menuItem.has_spice_level && cartItem.spice_level
+          ? cartItem.spice_level
+          : null;
+
+        validatedItems.push({
+          item: menuItem._id,
+          quantity,
+          unit_price: menuItem.price,
+          spice_level: spiceLevel
+        });
+      }
     }
 
     // Create the order
@@ -79,7 +101,9 @@ const getMyOrders = async (req, res) => {
     // Attach order items to each order
     const ordersWithItems = await Promise.all(
       orders.map(async (order) => {
-        const items = await OrderItem.find({ order: order._id }).populate('item', 'name image_url');
+        const items = await OrderItem.find({ order: order._id })
+          .populate('item', 'name image_url')
+          .populate('combo', 'name image_url');
         return { ...order.toObject(), items };
       })
     );
@@ -98,7 +122,9 @@ const getAllOrders = async (req, res) => {
 
     const ordersWithItems = await Promise.all(
       orders.map(async (order) => {
-        const items = await OrderItem.find({ order: order._id }).populate('item', 'name price');
+        const items = await OrderItem.find({ order: order._id })
+          .populate('item', 'name price')
+          .populate('combo', 'name');
         return { ...order.toObject(), items };
       })
     );
