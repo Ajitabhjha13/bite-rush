@@ -117,7 +117,7 @@ async function loadPopularDishes() {
           btn.innerHTML = '<i class="bi bi-plus-circle"></i> Add';
         }, 800);
 
-        openCartSidebar();
+        pulseCartButton();
       });
     });
   } catch (error) {
@@ -186,7 +186,7 @@ async function loadCombos() {
           showToast(`${btn.dataset.name} added to cart!`, 'success');
         }
 
-        openCartSidebar();
+        pulseCartButton();
       });
     });
 
@@ -196,13 +196,14 @@ async function loadCombos() {
   }
 }
 
-// Opens the cart offcanvas — used so customers get instant visual confirmation
-// right after clicking "Add" on the homepage (popular dishes / combos), without
-// the sidebar being forced open at any other time.
-function openCartSidebar() {
-  const el = document.getElementById('cartOffcanvas');
-  if (!el || typeof bootstrap === 'undefined') return;
+// Briefly pulses the floating cart button — gives instant visual confirmation
+// right after "Add" is clicked, without forcing the full cart panel open.
+// The customer can still click the button anytime to see the full cart.
+function pulseCartButton() {
+  const btn = document.querySelector('.floating-cart-btn');
+  if (!btn) return;
 
-  const instance = bootstrap.Offcanvas.getOrCreateInstance(el);
-  instance.show();
+  btn.classList.remove('pulse');
+  void btn.offsetWidth; // force reflow so the animation can restart on repeated clicks
+  btn.classList.add('pulse');
 }
