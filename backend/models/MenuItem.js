@@ -36,6 +36,15 @@ const menuItemSchema = new mongoose.Schema({
   is_bestseller: {
     type: Boolean,
     default: false
+  },
+  prep_time: {
+    type: String,
+    default: '15-20 min',
+    trim: true
+  },
+  has_spice_level: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

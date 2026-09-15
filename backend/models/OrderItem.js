@@ -20,6 +20,11 @@ const orderItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 0
+  },
+  spice_level: {
+    type: String,
+    enum: ['Mild', 'Medium', 'Hot'],
+    default: null
   }
 });
 

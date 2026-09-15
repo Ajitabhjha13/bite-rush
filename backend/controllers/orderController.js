@@ -30,10 +30,18 @@ const placeOrder = async (req, res) => {
       const quantity = cartItem.quantity || 1;
       total += menuItem.price * quantity;
 
+      // Only store a spice level if the dish actually supports it — ignore
+      // anything sent for items that don't (defensive, matches server-side
+      // validation philosophy used elsewhere in this project).
+      const spiceLevel = menuItem.has_spice_level && cartItem.spice_level
+        ? cartItem.spice_level
+        : null;
+
       validatedItems.push({
         item: menuItem._id,
         quantity,
-        unit_price: menuItem.price
+        unit_price: menuItem.price,
+        spice_level: spiceLevel
       });
     }
 

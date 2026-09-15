@@ -8,7 +8,11 @@ const placeOrderValidation = [
     .isMongoId().withMessage('Invalid item in cart.'),
 
   body('cart_items.*.quantity')
-    .isInt({ min: 1 }).withMessage('Quantity must be at least 1.')
+    .isInt({ min: 1 }).withMessage('Quantity must be at least 1.'),
+
+  body('cart_items.*.spice_level')
+    .optional({ checkFalsy: true })
+    .isIn(['Mild', 'Medium', 'Hot']).withMessage('Spice level must be Mild, Medium, or Hot.')
 ];
 
 const updateOrderStatusValidation = [

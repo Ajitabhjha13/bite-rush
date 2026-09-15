@@ -24,13 +24,17 @@ function addToCart(item) {
 
   if (existing) {
     existing.quantity += qtyToAdd;
+    if (item.spice_level !== undefined) {
+      existing.spice_level = item.spice_level; // update preference if re-picked
+    }
   } else {
     cart.push({
       id: item.id,
       name: item.name,
       price: item.price,
       image_url: item.image_url,
-      quantity: qtyToAdd
+      quantity: qtyToAdd,
+      spice_level: item.spice_level || null
     });
   }
 
@@ -104,7 +108,7 @@ function renderCart() {
     <div class="cart-item-row d-flex align-items-center">
       <img src="${item.image_url || 'https://placehold.co/60x60/f1f1f1/999999?text=%20'}" alt="${item.name}" width="50" height="50" class="rounded me-2" style="object-fit:cover;" onerror="this.onerror=null; this.src='https://placehold.co/60x60/f1f1f1/999999?text=%20';">
       <div class="flex-grow-1">
-        <div class="fw-semibold small">${item.name}</div>
+        <div class="fw-semibold small">${item.name} ${item.spice_level ? `<span class="badge bg-light text-dark border ms-1">${item.spice_level}</span>` : ''}</div>
         <div class="text-muted small">₹${item.price} x ${item.quantity}</div>
       </div>
       <div class="d-flex align-items-center gap-1">

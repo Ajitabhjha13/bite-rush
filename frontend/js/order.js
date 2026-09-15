@@ -51,7 +51,7 @@ function renderCheckoutPanel() {
 
   itemsList.innerHTML = cart.map((item) => `
     <div class="d-flex justify-content-between py-2 border-bottom">
-      <span>${item.name} <span class="text-muted">x${item.quantity}</span></span>
+      <span>${item.name} ${item.spice_level ? `<span class="badge bg-light text-dark border">${item.spice_level}</span>` : ''} <span class="text-muted">x${item.quantity}</span></span>
       <span class="fw-semibold">₹${item.price * item.quantity}</span>
     </div>
   `).join('');
@@ -81,7 +81,8 @@ async function placeOrder() {
   try {
     const cart_items = cart.map((item) => ({
       item_id: item.id,
-      quantity: item.quantity
+      quantity: item.quantity,
+      spice_level: item.spice_level || undefined
     }));
 
     const res = await fetch(`${API_BASE_URL}/orders`, {
@@ -128,7 +129,8 @@ function reorderPastOrder(orderId, orders) {
       name: oi.item.name,
       price: oi.item.price,
       image_url: oi.item.image_url,
-      quantity: oi.quantity
+      quantity: oi.quantity,
+      spice_level: oi.spice_level || undefined
     });
   });
 
@@ -183,7 +185,7 @@ async function loadOrderHistory() {
             <div class="fw-bold fs-5">₹${order.total_amount}</div>
           </div>
           <div class="mt-2 small text-muted">
-            ${order.items.map((oi) => `${oi.item ? oi.item.name : 'Item'} x${oi.quantity}`).join(', ')}
+            ${order.items.map((oi) => `${oi.item ? oi.item.name : 'Item'}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`).join(', ')}
           </div>
           <div class="mt-3 d-flex gap-2">
             <button class="btn btn-outline-warning btn-sm order-again-btn" data-order-id="${order._id}">

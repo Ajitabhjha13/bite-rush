@@ -31,7 +31,7 @@ const getMenuItemsByCategory = async (req, res) => {
 // @desc    Create a menu item (admin only)
 const createMenuItem = async (req, res) => {
   try {
-    const { name, description, price, image_url, category, is_available, is_veg, is_bestseller } = req.body;
+    const { name, description, price, image_url, category, is_available, is_veg, is_bestseller, prep_time, has_spice_level } = req.body;
 
     if (!name || !price || !category) {
       return res.status(400).json({ message: 'Name, price, and category are required' });
@@ -45,7 +45,9 @@ const createMenuItem = async (req, res) => {
       category,
       is_available: is_available !== undefined ? is_available : true,
       is_veg: is_veg !== undefined ? is_veg : true,
-      is_bestseller: is_bestseller !== undefined ? is_bestseller : false
+      is_bestseller: is_bestseller !== undefined ? is_bestseller : false,
+      prep_time: prep_time || '15-20 min',
+      has_spice_level: has_spice_level !== undefined ? has_spice_level : false
     });
 
     res.status(201).json(item);

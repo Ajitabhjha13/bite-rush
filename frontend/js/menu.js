@@ -66,13 +66,15 @@ function renderMenuItems(items, emptyMessage) {
 
   menuGrid.innerHTML = items.map((item) => `
     <div class="col-sm-6 col-lg-4 col-xl-3">
-      <div class="card menu-card">
+      <div class="card menu-card" data-item-id="${item._id}" style="cursor:pointer;">
         <img src="${item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image'}" alt="${item.name}" onerror="this.onerror=null; this.src='https://placehold.co/300x180/f1f1f1/999999?text=No+Image';">
+        <span class="delivery-time-badge"><i class="bi bi-clock"></i> ${item.prep_time || '15-20 min'}</span>
         ${item.is_bestseller ? '<span class="bestseller-badge"><i class="bi bi-star-fill"></i> Bestseller</span>' : ''}
         <div class="card-body d-flex flex-column">
           <h5 class="card-title fw-semibold">
             <span class="veg-indicator ${item.is_veg !== false ? 'veg' : 'non-veg'}" title="${item.is_veg !== false ? 'Vegetarian' : 'Non-Vegetarian'}"></span>
             ${item.name}
+            ${item.has_spice_level ? '<i class="bi bi-fire text-danger ms-1" title="Spice level available" style="font-size:0.8rem;"></i>' : ''}
           </h5>
           <p class="card-text text-muted small flex-grow-1">${item.description || ''}</p>
           <div class="d-flex justify-content-between align-items-center mt-2">
@@ -87,6 +89,57 @@ function renderMenuItems(items, emptyMessage) {
   `).join('');
 
   attachMenuCardHandlers();
+  attachCardClickForDetail();
+}
+
+// Opens the Item Detail Modal for a clicked card (but not when the click
+// was on the Add/quantity controls — those stop propagation separately).
+function attachCardClickForDetail() {
+  document.querySelectorAll('.menu-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      openItemDetailModal(card.dataset.itemId);
+    });
+  });
+
+  // Prevent qty control clicks from bubbling up and re-triggering the modal
+  document.querySelectorAll('.qty-control-wrapper').forEach((wrapper) => {
+    wrapper.addEventListener('click', (e) => e.stopPropagation());
+  });
+}
+
+// Populates and shows the Item Detail Modal for the given item
+function openItemDetailModal(itemId) {
+  const item = allMenuItems.find((i) => i._id === itemId);
+  if (!item) return;
+
+  document.getElementById('detailModalImage').src = item.image_url || 'https://placehold.co/600x400/f1f1f1/999999?text=No+Image';
+  document.getElementById('detailModalImage').alt = item.name;
+  document.getElementById('detailModalName').textContent = item.name;
+  document.getElementById('detailModalPrice').textContent = `₹${item.price}`;
+  document.getElementById('detailModalDescription').textContent = item.description || 'No description available.';
+  document.getElementById('detailModalPrepTime').textContent = item.prep_time || '15-20 min';
+
+  const vegEl = document.getElementById('detailModalVeg');
+  vegEl.className = `veg-indicator ${item.is_veg !== false ? 'veg' : 'non-veg'}`;
+  vegEl.title = item.is_veg !== false ? 'Vegetarian' : 'Non-Vegetarian';
+
+  document.getElementById('detailModalBestseller').classList.toggle('d-none', !item.is_bestseller);
+
+  const spiceSection = document.getElementById('detailModalSpiceSection');
+  if (item.has_spice_level) {
+    spiceSection.classList.remove('d-none');
+    document.getElementById('spiceMedium').checked = true; // reset to default each time modal opens
+  } else {
+    spiceSection.classList.add('d-none');
+  }
+
+  const qtyWrapper = document.getElementById('detailModalQtyWrapper');
+  qtyWrapper.className = 'qty-control-wrapper';
+  qtyWrapper.dataset.itemId = item._id;
+  qtyWrapper.innerHTML = getQtyControlHtml(item);
+  attachMenuCardHandlers();
+
+  new bootstrap.Modal(document.getElementById('itemDetailModal')).show();
 }
 
 // Returns either an "Add" button (item not in cart) or a "- qty +" stepper
@@ -125,22 +178,8 @@ function getQtyControlHtml(item) {
 }
 
 function attachMenuCardHandlers() {
-  document.querySelectorAll('.add-to-cart-btn, .qty-increase-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      addToCart({
-        id: btn.dataset.id,
-        name: btn.dataset.name,
-        price: parseFloat(btn.dataset.price),
-        image_url: btn.dataset.image
-      });
-    });
-  });
-
-  document.querySelectorAll('.qty-decrease-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      updateQuantity(btn.dataset.id, -1);
-    });
-  });
+  // No-op now — click handling is done once via event delegation (see DOMContentLoaded below).
+  // Kept as a function so existing calls elsewhere don't need to change.
 }
 
 // Re-renders just the quantity controls on every visible card — called whenever the cart changes.
@@ -253,6 +292,41 @@ function applySearchFromURL() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Event delegation: one listener handles Add/+/- clicks anywhere on the
+  // page (menu grid cards AND the item detail modal), including elements
+  // that get added/replaced later — no need to re-attach listeners each time.
+  document.addEventListener('click', (e) => {
+    const addBtn = e.target.closest('.add-to-cart-btn, .qty-increase-btn');
+    if (addBtn) {
+      const item = allMenuItems.find((i) => i._id === addBtn.dataset.id);
+      let spiceLevel;
+
+      if (item && item.has_spice_level) {
+        const isInModal = addBtn.closest('#itemDetailModal');
+        if (isInModal) {
+          const checked = document.querySelector('input[name="spiceLevel"]:checked');
+          spiceLevel = checked ? checked.value : 'Medium';
+        } else {
+          spiceLevel = 'Medium'; // quick-add from the card skips the picker — defaults to Medium
+        }
+      }
+
+      addToCart({
+        id: addBtn.dataset.id,
+        name: addBtn.dataset.name,
+        price: parseFloat(addBtn.dataset.price),
+        image_url: addBtn.dataset.image,
+        spice_level: spiceLevel
+      });
+      return;
+    }
+
+    const decBtn = e.target.closest('.qty-decrease-btn');
+    if (decBtn) {
+      updateQuantity(decBtn.dataset.id, -1);
+    }
+  });
+
   await loadCategories();
   await loadMenuItems();
   applyCategoryFromURL();

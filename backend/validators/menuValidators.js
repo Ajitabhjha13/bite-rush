@@ -3,6 +3,19 @@ const { body, param } = require('express-validator');
 const mongoIdParam = (paramName) =>
   param(paramName).isMongoId().withMessage(`Invalid ${paramName}.`);
 
+// Accepts either a full external URL (https://...) OR a local relative
+// image path (e.g. images/menu/dish.jpg) — since menu photos can now be
+// hosted locally in the frontend's own images/menu folder, not just Unsplash.
+function imageUrlValidator(value) {
+  const isFullUrl = /^https?:\/\/.+/i.test(value);
+  const isRelativePath = /^[\w\-./]+\.(jpg|jpeg|png|webp|gif)$/i.test(value);
+
+  if (!isFullUrl && !isRelativePath) {
+    throw new Error('Image URL must be a valid URL (https://...) or a local image path (e.g. images/menu/dish.jpg).');
+  }
+  return true;
+}
+
 const createMenuItemValidation = [
   body('name')
     .trim()
@@ -20,7 +33,7 @@ const createMenuItemValidation = [
 
   body('image_url')
     .optional({ checkFalsy: true })
-    .isURL().withMessage('Image URL must be a valid URL.'),
+    .custom(imageUrlValidator),
 
   body('category')
     .notEmpty().withMessage('Category is required.')
@@ -36,7 +49,16 @@ const createMenuItemValidation = [
 
   body('is_bestseller')
     .optional()
-    .isBoolean().withMessage('is_bestseller must be true or false.')
+    .isBoolean().withMessage('is_bestseller must be true or false.'),
+
+  body('prep_time')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 30 }).withMessage('Prep time must be under 30 characters.'),
+
+  body('has_spice_level')
+    .optional()
+    .isBoolean().withMessage('has_spice_level must be true or false.')
 ];
 
 // Same rules, but every field is optional (partial update via PUT)
@@ -59,7 +81,7 @@ const updateMenuItemValidation = [
 
   body('image_url')
     .optional({ checkFalsy: true })
-    .isURL().withMessage('Image URL must be a valid URL.'),
+    .custom(imageUrlValidator),
 
   body('category')
     .optional()
@@ -75,7 +97,16 @@ const updateMenuItemValidation = [
 
   body('is_bestseller')
     .optional()
-    .isBoolean().withMessage('is_bestseller must be true or false.')
+    .isBoolean().withMessage('is_bestseller must be true or false.'),
+
+  body('prep_time')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 30 }).withMessage('Prep time must be under 30 characters.'),
+
+  body('has_spice_level')
+    .optional()
+    .isBoolean().withMessage('has_spice_level must be true or false.')
 ];
 
 const deleteMenuItemValidation = [mongoIdParam('id')];

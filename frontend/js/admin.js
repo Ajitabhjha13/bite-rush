@@ -64,7 +64,7 @@ async function loadOrders(isInitialLoad = false) {
       <tr>
         <td class="fw-semibold">#${order._id.slice(-6).toUpperCase()}</td>
         <td>${order.user ? order.user.name : 'Unknown'}<br><span class="text-muted small">${order.user ? order.user.email : ''}</span></td>
-        <td class="small">${order.items.map((oi) => `${oi.item ? oi.item.name : 'Item'} x${oi.quantity}`).join(', ')}</td>
+        <td class="small">${order.items.map((oi) => `${oi.item ? oi.item.name : 'Item'}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`).join(', ')}</td>
         <td class="fw-semibold">₹${order.total_amount}</td>
         <td>
           <select class="form-select form-select-sm admin-status-select" data-order-id="${order._id}">
@@ -190,9 +190,11 @@ function openEditModal(itemId) {
   document.getElementById('itemPrice').value = item.price;
   document.getElementById('itemImage').value = item.image_url || '';
   document.getElementById('itemCategory').value = item.category ? item.category._id : '';
+  document.getElementById('itemPrepTime').value = item.prep_time || '';
   document.getElementById('itemAvailable').checked = item.is_available;
   document.getElementById('itemVeg').checked = item.is_veg !== false;
   document.getElementById('itemBestseller').checked = !!item.is_bestseller;
+  document.getElementById('itemHasSpiceLevel').checked = !!item.has_spice_level;
 
   new bootstrap.Modal(document.getElementById('menuItemModal')).show();
 }
@@ -201,9 +203,11 @@ function resetMenuForm() {
   document.getElementById('menuModalTitle').textContent = 'Add Menu Item';
   document.getElementById('menuItemForm').reset();
   document.getElementById('menuItemId').value = '';
+  document.getElementById('itemPrepTime').value = '';
   document.getElementById('itemAvailable').checked = true;
   document.getElementById('itemVeg').checked = true;
   document.getElementById('itemBestseller').checked = false;
+  document.getElementById('itemHasSpiceLevel').checked = false;
   document.getElementById('menuFormError').classList.add('d-none');
 }
 
@@ -217,9 +221,11 @@ async function saveMenuItem() {
     price: parseFloat(document.getElementById('itemPrice').value),
     image_url: document.getElementById('itemImage').value,
     category: document.getElementById('itemCategory').value,
+    prep_time: document.getElementById('itemPrepTime').value,
     is_available: document.getElementById('itemAvailable').checked,
     is_veg: document.getElementById('itemVeg').checked,
-    is_bestseller: document.getElementById('itemBestseller').checked
+    is_bestseller: document.getElementById('itemBestseller').checked,
+    has_spice_level: document.getElementById('itemHasSpiceLevel').checked
   };
 
   errorBox.classList.add('d-none');
