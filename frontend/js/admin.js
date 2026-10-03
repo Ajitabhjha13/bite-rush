@@ -79,6 +79,7 @@ async function loadOrders(isInitialLoad = false) {
             <option value="Preparing" ${order.status === 'Preparing' ? 'selected' : ''}>Preparing</option>
             <option value="Ready" ${order.status === 'Ready' ? 'selected' : ''}>Ready</option>
             <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+            <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
           </select>
         </td>
         <td class="small text-muted">${new Date(order.createdAt).toLocaleString()}</td>

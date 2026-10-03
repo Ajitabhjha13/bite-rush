@@ -152,6 +152,29 @@ function reorderPastOrder(orderId, orders) {
   window.location.href = 'menu.html';
 }
 
+// Cancels a past order (only allowed while status is still "Received")
+async function cancelOrder(orderId) {
+  if (!confirm('Are you sure you want to cancel this order?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to cancel order');
+    }
+
+    showToast('Order cancelled successfully', 'success');
+    loadOrderHistory();
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
 // Load order history from API
 async function loadOrderHistory() {
   const container = document.getElementById('orderHistoryList');
@@ -211,9 +234,16 @@ async function loadOrderHistory() {
             <button class="btn btn-outline-dark btn-sm track-order-btn" data-bs-toggle="collapse" data-bs-target="#tracker-${index}">
               <i class="bi bi-truck"></i> Track Order
             </button>
+            ${order.status === 'Received' ? `
+              <button class="btn btn-outline-danger btn-sm cancel-order-btn" data-order-id="${order._id}">
+                <i class="bi bi-x-circle"></i> Cancel Order
+              </button>
+            ` : ''}
           </div>
           <div class="collapse mt-3" id="tracker-${index}">
-            ${renderStatusTracker(order.status)}
+            ${order.status === 'Cancelled'
+              ? '<p class="text-danger small mb-0"><i class="bi bi-x-circle"></i> This order was cancelled.</p>'
+              : renderStatusTracker(order.status)}
           </div>
         </div>
       </div>
@@ -221,6 +251,10 @@ async function loadOrderHistory() {
 
     document.querySelectorAll('.order-again-btn').forEach((btn) => {
       btn.addEventListener('click', () => reorderPastOrder(btn.dataset.orderId, orders));
+    });
+
+    document.querySelectorAll('.cancel-order-btn').forEach((btn) => {
+      btn.addEventListener('click', () => cancelOrder(btn.dataset.orderId));
     });
 
   } catch (error) {

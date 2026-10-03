@@ -29,8 +29,12 @@ const updateOrderStatusValidation = [
 
   body('status')
     .notEmpty().withMessage('Status is required.')
-    .isIn(['Received', 'Preparing', 'Ready', 'Delivered'])
-    .withMessage('Status must be one of: Received, Preparing, Ready, Delivered.')
+    .isIn(['Received', 'Preparing', 'Ready', 'Delivered', 'Cancelled'])
+    .withMessage('Status must be one of: Received, Preparing, Ready, Delivered, Cancelled.')
 ];
 
-module.exports = { placeOrderValidation, updateOrderStatusValidation };
+const cancelOrderValidation = [
+  param('id').isMongoId().withMessage('Invalid order id.')
+];
+
+module.exports = { placeOrderValidation, updateOrderStatusValidation, cancelOrderValidation };

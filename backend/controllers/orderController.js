@@ -140,7 +140,7 @@ const getAllOrders = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const validStatuses = ['Received', 'Preparing', 'Ready', 'Delivered'];
+    const validStatuses = ['Received', 'Preparing', 'Ready', 'Delivered', 'Cancelled'];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
@@ -162,4 +162,35 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-module.exports = { placeOrder, getMyOrders, getAllOrders, updateOrderStatus };
+// @route   PUT /api/orders/:id/cancel
+// @desc    Cancel your own order (customer) — only allowed while the
+//          kitchen hasn't started preparing it yet (status = 'Received').
+const cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // A customer may only cancel their OWN order — never anyone else's,
+    // even if they know the order id (same defensive pattern used
+    // throughout this project for every user-owned resource).
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'You can only cancel your own orders' });
+    }
+
+    if (order.status !== 'Received') {
+      return res.status(400).json({ message: `This order is already ${order.status.toLowerCase()} and can no longer be cancelled` });
+    }
+
+    order.status = 'Cancelled';
+    await order.save();
+
+    res.status(200).json({ message: 'Order cancelled successfully', order });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, cancelOrder };

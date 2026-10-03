@@ -329,6 +329,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
 .status-Preparing { background: #fff3e0; color: #e65100; }
 .status-Ready { background: #e8f5e9; color: #2e7d32; }
 .status-Delivered { background: #f1f8e9; color: #558b2f; }
+.status-Cancelled { background: #ffebee; color: #c62828; }
 
 .admin-sidebar { width: 220px; min-height: calc(100vh - 56px); }
 
