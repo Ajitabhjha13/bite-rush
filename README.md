@@ -21,6 +21,14 @@
   <img src="https://img.shields.io/badge/Render-00000F?style=flat-square&logo=render&logoColor=white">
 </p>
 
+<br>
+
+<p align="center">
+  <img src="docs/screenshots/home.png" alt="Bite Rush home page" width="100%">
+</p>
+
+<p align="center"><sub>Screenshots use demo orders and fictional customers.</sub></p>
+
 > Note: hosted on Render's free tier — the backend may take 30–50 seconds to "wake up" if it hasn't been used recently.
 
 ---
@@ -53,15 +61,20 @@ So Bite Rush became an exercise in building things **the way a production app wo
 
 ## 📸 Screenshots
 
-<p align="center"><i>Screenshots are from the live app, with real seeded menu data.</i></p>
-
-| Menu — live search, sort, spice/veg indicators | Admin — live incoming orders |
+| Menu — search, sort, categories, prep time, spice & veg markers | Combo meals — "Save ₹X" computed from live prices |
 |---|---|
-| ![Menu page](docs/screenshots/menu.png) | ![Admin orders](docs/screenshots/admin-orders.png) |
+| ![Menu page](docs/screenshots/menu.png) | ![Combo meals](docs/screenshots/combo-meals.png) |
 
-| Cart — regular items + a combo bundle | Admin — building a combo |
+| Cart — regular items, a combo and a spice level | Order history — live status tracker and one-click reorder |
 |---|---|
-| ![Cart with combo](docs/screenshots/cart-combo.png) | ![Admin combo editor](docs/screenshots/admin-combo-edit.png) |
+| ![Cart with combo](docs/screenshots/cart.png) | ![Order tracking](docs/screenshots/order-tracking.png) |
+
+| Admin — live incoming orders (auto-refresh every 30s) | Admin — menu management |
+|---|---|
+| ![Admin orders](docs/screenshots/admin-orders.png) | ![Admin menu management](docs/screenshots/admin-menu.png) |
+
+<p align="center"><b>Mobile</b> — the same flow on a phone: home, menu, cart and order tracking</p>
+<p align="center"><img src="docs/screenshots/mobile.png" alt="Bite Rush on mobile" width="100%"></p>
 
 ---
 
