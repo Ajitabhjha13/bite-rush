@@ -123,8 +123,8 @@ async function cancelBooking({ reservationId, userId, now = new Date() }) {
   if (!['held', 'confirmed'].includes(r.status)) {
     throw new BookingError(409, `This booking is already ${r.status}.`);
   }
-  if (r.status === 'confirmed' && r.date <= booking.istToday(now)) {
-    throw new BookingError(409, 'Bookings can only be cancelled before the day of the reservation.');
+  if (r.status === 'confirmed' && booking.refundPercent(r.date, r.slot, now) === null) {
+    throw new BookingError(409, 'This time slot has already started, so the booking can no longer be cancelled.');
   }
   const updated = await Reservation.findOneAndUpdate(
     { _id: r._id, status: { $in: ['held', 'confirmed'] } },
@@ -135,6 +135,15 @@ async function cancelBooking({ reservationId, userId, now = new Date() }) {
   return updated;
 }
 
+// Used when payment could not even be started: free the seat right away
+async function releaseHold(reservationId) {
+  return Reservation.findOneAndUpdate(
+    { _id: reservationId, status: 'held' },
+    { $set: { status: 'cancelled', is_active: false, hold_expires_at: null } },
+    { returnDocument: 'after' }
+  );
+}
+
 async function listMyBookings(userId, now = new Date()) {
   await expireStaleHolds(now);
   return Reservation.find({ user: userId })
@@ -143,5 +152,5 @@ async function listMyBookings(userId, now = new Date()) {
 }
 
 module.exports = {
-  BookingError, expireStaleHolds, getAvailability, holdSeat, confirmHold, cancelBooking, listMyBookings
+  BookingError, expireStaleHolds, getAvailability, holdSeat, confirmHold, cancelBooking, releaseHold, listMyBookings
 };

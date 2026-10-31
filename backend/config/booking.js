@@ -7,6 +7,9 @@ const SLOTS = ['12:00', '13:30', '15:00', '19:00', '20:30']; // fixed 90-min slo
 const SLOT_MINUTES = 90;
 const HOLD_MINUTES = Number(process.env.BOOKING_HOLD_MINUTES) || 2; // seat held while paying
 const MAX_ADVANCE_DAYS = 7;
+const DEPOSIT_RUPEES = Number(process.env.BOOKING_DEPOSIT_RUPEES) || 100; // adjusted in the final bill
+const REFUND_FULL_HOURS = 6; // cancel >= 6h before slot  -> 100% refund
+const REFUND_HALF_HOURS = 2; // cancel 2h..6h before slot -> 50% refund; < 2h -> 0%
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -43,7 +46,22 @@ function holdExpiry(now = new Date()) {
   return new Date(now.getTime() + HOLD_MINUTES * 60 * 1000);
 }
 
+// Slot start as a real instant (slot times are IST wall-clock times)
+function slotStart(dateStr, slot) {
+  return new Date(new Date(`${dateStr}T${slot}:00Z`).getTime() - IST_OFFSET_MS);
+}
+
+// Refund % for cancelling a paid booking now. null = slot already started (no cancel).
+function refundPercent(dateStr, slot, now = new Date()) {
+  const hoursLeft = (slotStart(dateStr, slot).getTime() - now.getTime()) / 3600000;
+  if (hoursLeft <= 0) return null;
+  if (hoursLeft >= REFUND_FULL_HOURS) return 100;
+  if (hoursLeft >= REFUND_HALF_HOURS) return 50;
+  return 0;
+}
+
 module.exports = {
+  DEPOSIT_RUPEES, REFUND_FULL_HOURS, REFUND_HALF_HOURS, slotStart, refundPercent,
   SLOTS, SLOT_MINUTES, HOLD_MINUTES, MAX_ADVANCE_DAYS,
   istToday, addDays, isValidDateString, isBookableDate, isValidSlot, holdExpiry
 };

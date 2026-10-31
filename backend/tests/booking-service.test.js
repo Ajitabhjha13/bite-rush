@@ -200,13 +200,13 @@ describe('cancel', () => {
     expect(a.slots.find((s) => s.slot === '19:00').total_free).toBe(6);
   });
 
-  test('confirmed booking can be cancelled before the day, not on the day', async () => {
+  test('confirmed booking can be cancelled until the slot starts, not after', async () => {
     const u = await newUser();
     const { reservation } = await hold(u._id);
     await svc.confirmHold({ reservationId: reservation._id, userId: u._id, now: NOW });
-    await expect(svc.cancelBooking({ reservationId: reservation._id, userId: u._id, now: ist('2026-11-07T09:00:00') }))
+    await expect(svc.cancelBooking({ reservationId: reservation._id, userId: u._id, now: ist('2026-11-07T19:00:00') }))
       .rejects.toMatchObject({ status: 409 });
-    const c = await svc.cancelBooking({ reservationId: reservation._id, userId: u._id, now: ist('2026-11-06T22:00:00') });
+    const c = await svc.cancelBooking({ reservationId: reservation._id, userId: u._id, now: ist('2026-11-07T18:00:00') });
     expect(c.status).toBe('cancelled');
   });
 });

@@ -5,6 +5,7 @@ const { protect } = require('../middleware/authMiddleware');
 const v = require('../validators/bookingValidators');
 const { handleValidationErrors } = require('../middleware/validate');
 
+router.get('/policy', c.getPolicy);
 router.get('/availability', v.availabilityValidation, handleValidationErrors, c.getAvailability);
 router.get('/my', protect, c.getMyBookings);
 router.post('/hold', protect, v.holdValidation, handleValidationErrors, c.holdSeat);

@@ -14,7 +14,10 @@ const holdValidation = [
 
 const confirmValidation = [
   param('id').isMongoId().withMessage('Invalid booking id.'),
-  body('payment_ref').optional({ checkFalsy: true }).isString().isLength({ max: 100 })
+  body('payment_ref').optional({ checkFalsy: true }).isString().isLength({ max: 100 }),
+  body('razorpay_payment_id').optional({ checkFalsy: true }).isString().isLength({ max: 100 }),
+  body('razorpay_signature').if(body('razorpay_payment_id').exists({ checkFalsy: true }))
+    .isString().notEmpty().withMessage('Payment signature is required.').isLength({ max: 200 })
 ];
 
 const cancelBookingValidation = [

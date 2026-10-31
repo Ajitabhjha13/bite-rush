@@ -41,4 +41,19 @@ describe('booking config', () => {
     expect(b.isValidSlot('19:00')).toBe(true);
     expect(b.isValidSlot('18:00')).toBe(false);
   });
+
+  test('refund tiers: >=6h 100%, 2-6h 50%, <2h 0%, started = null', () => {
+    const f = (t) => b.refundPercent('2026-11-07', '19:00', ist(t));
+    expect(f('2026-11-07T13:00:00')).toBe(100); // exactly 6h
+    expect(f('2026-11-07T13:00:01')).toBe(50);  // 5h59m59s
+    expect(f('2026-11-07T17:00:00')).toBe(50);  // exactly 2h
+    expect(f('2026-11-07T17:00:01')).toBe(0);   // 1h59m59s
+    expect(f('2026-11-07T18:59:59')).toBe(0);
+    expect(f('2026-11-07T19:00:00')).toBeNull(); // slot started
+    expect(f('2026-11-05T09:00:00')).toBe(100);
+  });
+
+  test('deposit is Rs 100 by default', () => {
+    expect(b.DEPOSIT_RUPEES).toBe(100);
+  });
 });

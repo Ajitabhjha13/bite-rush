@@ -21,7 +21,20 @@ const reservationSchema = new mongoose.Schema({
   is_active: { type: Boolean, default: true },
   hold_expires_at: { type: Date, default: null },
   idempotency_key: { type: String, default: undefined },
-  payment_ref: { type: String, default: null }
+  payment_ref: { type: String, default: null }, // mock payments only
+  // --- Razorpay ---
+  amount: { type: Number, default: 0 }, // deposit in paise
+  razorpay_order_id: { type: String, default: undefined },
+  razorpay_payment_id: { type: String, default: undefined },
+  payment_status: {
+    type: String,
+    enum: ['none', 'pending', 'paid', 'refunded', 'partially_refunded'],
+    default: 'none'
+  },
+  refund_status: { type: String, enum: ['none', 'processing', 'done', 'failed'], default: 'none' },
+  refund_id: { type: String, default: null },
+  refund_amount: { type: Number, default: 0 }, // paise
+  refunded_at: { type: Date, default: null }
 }, { timestamps: true });
 
 reservationSchema.pre('validate', function () {
@@ -47,6 +60,16 @@ reservationSchema.index(
 reservationSchema.index(
   { idempotency_key: 1 },
   { unique: true, partialFilterExpression: { idempotency_key: { $type: 'string' } }, name: 'uniq_idempotency_key' }
+);
+
+// 5) One Razorpay order / payment can belong to only one booking
+reservationSchema.index(
+  { razorpay_order_id: 1 },
+  { unique: true, partialFilterExpression: { razorpay_order_id: { $type: 'string' } }, name: 'uniq_rzp_order' }
+);
+reservationSchema.index(
+  { razorpay_payment_id: 1 },
+  { unique: true, partialFilterExpression: { razorpay_payment_id: { $type: 'string' } }, name: 'uniq_rzp_payment' }
 );
 
 module.exports = mongoose.model('Reservation', reservationSchema);

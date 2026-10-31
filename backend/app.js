@@ -8,10 +8,13 @@ const menuRoutes = require('./routes/menuRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const comboRoutes = require('./routes/comboRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
 app.use(cors());
+// Webhook needs the RAW body to verify Razorpay's signature -> mounted BEFORE express.json()
+app.use('/api/payments', paymentRoutes);
 app.use(express.json());
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
 
