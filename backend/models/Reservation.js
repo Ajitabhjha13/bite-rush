@@ -20,7 +20,8 @@ const reservationSchema = new mongoose.Schema({
   // must set `is_active` too.
   is_active: { type: Boolean, default: true },
   hold_expires_at: { type: Date, default: null },
-  idempotency_key: { type: String, default: undefined }
+  idempotency_key: { type: String, default: undefined },
+  payment_ref: { type: String, default: null }
 }, { timestamps: true });
 
 reservationSchema.pre('validate', function () {
