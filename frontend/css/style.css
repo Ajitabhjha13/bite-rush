@@ -538,3 +538,48 @@ h1, h2, h3, .navbar-brand, .brand-font {
 .password-field-wrapper .form-control.is-valid {
   background-image: none !important;
 }
+
+/* ===== Table reservation ===== */
+.reserve-hero { background: var(--color-ink); }
+.date-chip {
+  border: 1.5px solid #e3ded6; background: #fff; border-radius: 14px;
+  padding: 8px 14px; min-width: 74px; text-align: center; cursor: pointer;
+  transition: all 0.15s ease; line-height: 1.2;
+}
+.date-chip small { display: block; color: #8a8178; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.date-chip strong { font-size: 1.05rem; }
+.date-chip:hover { border-color: var(--color-gold); }
+.date-chip.active { background: var(--color-ink); border-color: var(--color-ink); color: #fff; }
+.date-chip.active small { color: var(--color-gold-light); }
+
+.slot-card {
+  border: 1.5px solid #e3ded6; border-radius: 14px; background: #fff;
+  padding: 14px 12px; text-align: center; cursor: pointer; width: 100%;
+  transition: all 0.15s ease;
+}
+.slot-card .slot-time { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }
+.slot-card .slot-free { font-size: 0.78rem; color: #2e7d32; font-weight: 600; }
+.slot-card.low .slot-free { color: #e65100; }
+.slot-card:hover:not(:disabled) { border-color: var(--color-gold); transform: translateY(-2px); }
+.slot-card.active { border-color: var(--color-gold); background: #fff8e8; box-shadow: 0 0 0 3px rgba(232,169,59,0.25); }
+.slot-card:disabled { background: #f6f4f0; color: #aaa; cursor: not-allowed; }
+.slot-card:disabled .slot-free { color: #b3261e; }
+
+.guest-stepper { display: inline-flex; align-items: center; gap: 14px; }
+.guest-stepper button { width: 38px; height: 38px; border-radius: 50%; padding: 0; line-height: 1; }
+.guest-stepper .guest-count { font-size: 1.4rem; font-weight: 700; min-width: 28px; text-align: center; }
+
+.hold-timer { font-family: var(--font-display); font-size: 2.4rem; font-weight: 700; letter-spacing: 1px; }
+.hold-timer.urgent { color: #b3261e; }
+.hold-progress { height: 6px; border-radius: 6px; background: #eee; overflow: hidden; }
+.hold-progress > div { height: 100%; background: var(--color-gold); transition: width 0.25s linear; }
+
+.booking-card { border: none; border-radius: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.06); }
+.bk-confirmed { background: #e8f5e9; color: #2e7d32; }
+.bk-held { background: #fff3e0; color: #e65100; }
+.bk-cancelled { background: #ffebee; color: #c62828; }
+.bk-expired { background: #eceff1; color: #546e7a; }
+.policy-list li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 0.9rem; }
+
+#reserveTabs .nav-link { color: var(--color-ink); background: #f3f0ea; font-weight: 600; border-radius: 30px; padding: 8px 20px; }
+#reserveTabs .nav-link.active { background: var(--color-ink); color: #fff; }

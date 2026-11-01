@@ -25,6 +25,12 @@ function logout() {
   window.location.href = 'index.html';
 }
 
+// After login/register, go back to where the user came from (only known pages are allowed)
+function getPostLoginPage() {
+  const next = new URLSearchParams(window.location.search).get('next');
+  return ['reserve.html'].includes(next) ? next : 'menu.html';
+}
+
 function updateAuthNav() {
   const authNavItem = document.getElementById('authNavItem');
   if (!authNavItem) return;
@@ -40,6 +46,7 @@ function updateAuthNav() {
         <ul class="dropdown-menu dropdown-menu-end">
           ${user.role === 'admin' ? '<li><a class="dropdown-item" href="admin.html"><i class="bi bi-speedometer2"></i> Admin Dashboard</a></li>' : ''}
           <li><a class="dropdown-item" href="order.html"><i class="bi bi-receipt"></i> My Orders</a></li>
+          <li><a class="dropdown-item" href="reserve.html#my-bookings"><i class="bi bi-calendar2-check"></i> My Bookings</a></li>
           <li><hr class="dropdown-divider"></li>
           <li><a class="dropdown-item text-danger" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
         </ul>
@@ -99,7 +106,7 @@ function setupLoginForm() {
       }
 
       saveSession(data.token, data.user);
-      window.location.href = 'menu.html';
+      window.location.href = getPostLoginPage();
     } catch (error) {
       errorBox.textContent = error.message;
       errorBox.classList.remove('d-none');
@@ -154,7 +161,7 @@ function setupRegisterForm() {
       }
 
       saveSession(data.token, data.user);
-      window.location.href = 'menu.html';
+      window.location.href = getPostLoginPage();
     } catch (error) {
       errorBox.textContent = error.message;
       errorBox.classList.remove('d-none');
