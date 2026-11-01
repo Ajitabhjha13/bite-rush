@@ -266,7 +266,7 @@ All protected routes require an `Authorization: Bearer <token>` header.
 - [x] Order cancellation
 - [x] Self-hosted dish images
 - [ ] Pagination on admin orders/menu tables
-- [x] Automated tests (Jest + Supertest + in-memory MongoDB, 90 tests)
+- [x] Automated tests (Jest + Supertest + in-memory MongoDB, 92 tests)
 - [x] Table booking with Razorpay deposit (test mode), tiered refunds and an admin reservations grid
 - [ ] Real-time order notifications via WebSockets
 - [ ] React Native mobile app using the existing REST API
