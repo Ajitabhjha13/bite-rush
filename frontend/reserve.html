@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reserve a Table | Bite Rush</title>
+  <link rel="icon" type="image/png" href="images/logo.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center gap-2" href="index.html">
+        <img src="images/logo.png" alt="Bite Rush" class="navbar-logo"> Bite Rush
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="menu.html">Menu</a></li>
+          <li class="nav-item"><a class="nav-link" href="outlets.html">Outlets</a></li>
+          <li class="nav-item"><a class="nav-link active" href="reserve.html">Reserve</a></li>
+          <li class="nav-item"><a class="nav-link" href="order.html">My Orders</a></li>
+          <li class="nav-item">
+            <a class="nav-link position-relative" href="menu.html#cart">
+              <i class="bi bi-cart3 fs-5"></i>
+              <span id="cartCount" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-100 translate-middle" style="font-size:0.65rem;">0</span>
+            </a>
+          </li>
+          <li class="nav-item" id="authNavItem">
+            <a class="btn btn-warning fw-semibold ms-lg-2" href="login.html">Login</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <section class="py-5 reserve-hero text-white text-center">
+    <div class="container">
+      <h1 class="fw-bold mb-2">Reserve a Table</h1>
+      <p class="text-white-50 mb-0">Pick a day, pick a time. Your table is held for <span id="heroHold">2</span> minutes while you pay a small <span id="heroDeposit">₹100</span> deposit, adjusted in your bill.</p>
+    </div>
+  </section>
+
+  <section class="py-4">
+    <div class="container" style="max-width: 920px;">
+
+      <ul class="nav nav-pills justify-content-center gap-2 mb-4" id="reserveTabs">
+        <li class="nav-item"><button class="nav-link active" id="tabBookBtn" data-bs-toggle="pill" data-bs-target="#tabBook" type="button"><i class="bi bi-calendar2-plus"></i> Book a table</button></li>
+        <li class="nav-item"><button class="nav-link" id="tabMineBtn" data-bs-toggle="pill" data-bs-target="#tabMine" type="button"><i class="bi bi-calendar2-check"></i> My bookings</button></li>
+      </ul>
+
+      <div class="tab-content">
+
+        <!-- ===== BOOK ===== -->
+        <div class="tab-pane fade show active" id="tabBook">
+          <h5 class="fw-semibold mb-2">1. Choose a date</h5>
+          <p class="text-muted small">Bookings for a day close at 11:59 PM the night before, so the earliest date is tomorrow.</p>
+          <div id="dateChips" class="d-flex flex-wrap gap-2 mb-4"></div>
+
+          <h5 class="fw-semibold mb-2">2. How many guests?</h5>
+          <div class="guest-stepper mb-4">
+            <button type="button" class="btn btn-outline-dark" id="guestMinus" aria-label="Fewer guests"><i class="bi bi-dash"></i></button>
+            <span class="guest-count" id="guestCount">2</span>
+            <button type="button" class="btn btn-outline-dark" id="guestPlus" aria-label="More guests"><i class="bi bi-plus"></i></button>
+            <span class="text-muted small ms-1">max 6 per booking</span>
+          </div>
+
+          <h5 class="fw-semibold mb-2">3. Pick a time</h5>
+          <div id="slotGrid" class="row g-3 mb-4"></div>
+
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <p class="fw-semibold mb-2"><i class="bi bi-shield-check text-warning"></i> Cancellation &amp; refund policy</p>
+              <ul class="list-unstyled policy-list mb-0 text-muted" id="policyList"></ul>
+            </div>
+          </div>
+
+          <div class="d-grid d-sm-flex justify-content-sm-between align-items-sm-center gap-3">
+            <div id="selectionSummary" class="text-muted">Select a date and a time.</div>
+            <button class="btn btn-warning btn-lg fw-semibold px-4" id="holdBtn" disabled>
+              Hold my table <i class="bi bi-arrow-right-circle ms-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== MY BOOKINGS ===== -->
+        <div class="tab-pane fade" id="tabMine">
+          <div id="myBookings"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Hold + payment modal ===== -->
+  <div class="modal fade" id="holdModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4">
+        <div class="modal-body p-4" id="holdModalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Cancel modal ===== -->
+  <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4">
+        <div class="modal-body p-4" id="cancelModalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-dark text-white pt-5 pb-4 mt-4" data-bs-theme="dark">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <p class="mb-2 fw-bold fs-5 d-flex align-items-center gap-2"><img src="images/logo.png" alt="Bite Rush" class="footer-logo"> Bite Rush</p>
+          <p class="text-muted small mb-0">Fresh food, ordered fast. A full-stack food ordering platform built with Node.js, Express, MongoDB & Bootstrap.</p>
+        </div>
+        <div class="col-md-4">
+          <p class="fw-semibold mb-2">Quick Links</p>
+          <ul class="list-unstyled small">
+            <li class="mb-1"><a href="index.html" class="footer-link">Home</a></li>
+            <li class="mb-1"><a href="menu.html" class="footer-link">Menu</a></li>
+            <li class="mb-1"><a href="reserve.html" class="footer-link">Reserve a Table</a></li>
+            <li class="mb-1"><a href="order.html" class="footer-link">My Orders</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <p class="fw-semibold mb-2">Visit us</p>
+          <ul class="list-unstyled small text-muted">
+            <li class="mb-1"><i class="bi bi-geo-alt-fill me-1"></i> Sayajigunj, Vadodara, Gujarat</li>
+          </ul>
+        </div>
+      </div>
+      <hr class="border-secondary my-4">
+      <p class="mb-0 text-muted small text-center">&copy; 2026 Bite Rush. Designed &amp; developed by <span class="text-white fw-semibold">Ajitabh Kumar Jha</span> as a full-stack learning project. Payments run in Razorpay <strong>test mode</strong>: no real money is charged.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/reserve.js"></script>
+</body>
+</html>

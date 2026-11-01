@@ -55,6 +55,7 @@ So Bite Rush became an exercise in building things **the way a production app wo
 | --- | --- |
 | 🍱 **Combo meals**<br>Admin-built bundles of existing menu items at a discounted price, with the **savings auto-computed** from the live prices of the items inside — never a stale, hand-typed number. | 📦 **Order lifecycle**<br>Received → Preparing → Ready → Delivered, with a live **status tracker**. Customers can **cancel** their own order while it's still queued, and **reorder** a past order in one click. |
 | 🔐 **Server-validated pricing**<br>Every order total is recalculated from the database at checkout — the price a client sends is never trusted, closing the most common e-commerce tampering vector. | 🛡️ **Role-based admin dashboard**<br>A separate, protected dashboard for menu CRUD, live incoming orders (auto-refreshing), and combo management — completely inaccessible to non-admin accounts, enforced on the API itself. |
+| 🪑 **Table booking with deposits**<br>Day-ahead reservations (5 slots, 10 tables, a separate online-only table pool). A seat is **held for 2 minutes** while the customer pays a ₹100 deposit via **Razorpay (test mode)**; double-booking is prevented at the **database level** with partial unique indexes, and a **tiered refund** (100% / 50% / 0%) applies on cancellation. | 🗓️ **Admin reservations grid**<br>Table × time-slot view for any date, with customer details, **Seated / No-show** check-in, restaurant-side **cancel with a full refund**, a retry button for failed refunds, and per-table **online / walk-in** switches. |
 | 🖼️ **Self-hosted images**<br>Dish photos live in the project's own `images/` folder, not hot-linked from a third party — so the menu never breaks if an external image host changes or removes a file. | ✅ **Defensive input validation**<br>Every write endpoint runs through `express-validator` server-side — registration, login, menu changes, and order placement all reject malformed input before it ever reaches the database. |
 
 ---
@@ -126,6 +127,7 @@ backend/
 | **Ownership checks** | Cancelling an order verifies the order belongs to the requesting user server-side — a customer can't cancel (or even see) someone else's order by guessing an id. |
 | **Server-side price validation** | Checkout recalculates every line item's price from the current database record; a tampered client-side price is simply ignored. |
 | **Input validation** | `express-validator` rule sets on every write endpoint (auth, menu, orders, combos) reject malformed or out-of-range input before it reaches a controller. |
+| **Payment integrity** | The deposit amount is decided server-side; checkout signatures (HMAC) and Razorpay webhooks (raw-body signature, event-id de-duplication) are verified with constant-time comparison, and one code path confirms every payment so the two can never disagree. A refund is claimed atomically, so it can never be issued twice. |
 | **Secrets management** | `JWT_SECRET` and `MONGO_URI` live only in environment variables (`.env`, Render env vars) — never committed; `.env` is git-ignored from day one. |
 
 ---
@@ -197,6 +199,17 @@ Create a `.env` file in `backend/` (see `.env.example`):
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_long_random_secret
+# Table booking payments (Razorpay TEST keys only) — see .env.example
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=your_razorpay_test_key_secret
+RAZORPAY_WEBHOOK_SECRET=another_long_random_string
+```
+
+Create the 10 tables once, then run the automated tests any time:
+
+```bash
+node seedTables.js
+npm test
 ```
 
 Run the server:
@@ -227,6 +240,15 @@ Open `frontend/index.html` directly in your browser, or serve the `frontend/` fo
 | GET | `/api/menu/admin/all` | Admin | List all menu items (incl. unavailable) |
 | POST / PUT / DELETE | `/api/menu/admin/...` | Admin | Menu item CRUD |
 | POST / PUT / DELETE | `/api/combos/admin/...` | Admin | Combo CRUD |
+| GET | `/api/bookings/policy` · `/api/bookings/availability?date=` | Public | Booking rules; free tables per slot |
+| POST | `/api/bookings/hold` | Customer | Hold a table for 2 minutes and create a Razorpay order |
+| POST | `/api/bookings/:id/confirm` | Customer | Confirm after payment (signature verified) |
+| GET | `/api/bookings/my` | Customer | My bookings |
+| PUT | `/api/bookings/:id/cancel` | Customer | Cancel; refund by how close the slot is |
+| POST | `/api/payments/webhook` | Razorpay | Signed webhook (payment captured) |
+| GET | `/api/bookings/admin/grid?date=` | Admin | Table × slot grid with summary |
+| PUT | `/api/bookings/admin/:id/attendance` · `/cancel` · `/retry-refund` | Admin | Seated / no-show; cancel with full refund; retry a failed refund |
+| PUT | `/api/tables/:id` | Admin | Switch a table online / walk-in or in / out of service |
 | GET | `/api/orders/admin/all` | Admin | View all orders |
 | PUT | `/api/orders/admin/:id/status` | Admin | Update an order's status |
 
@@ -244,10 +266,9 @@ All protected routes require an `Authorization: Bearer <token>` header.
 - [x] Order cancellation
 - [x] Self-hosted dish images
 - [ ] Pagination on admin orders/menu tables
-- [ ] Automated tests (Jest + Supertest)
-- [ ] Payment gateway integration (Razorpay)
+- [x] Automated tests (Jest + Supertest + in-memory MongoDB, 92 tests)
+- [x] Table booking with Razorpay deposit (test mode), tiered refunds and an admin reservations grid
 - [ ] Real-time order notifications via WebSockets
-- [ ] Multi-restaurant support
 - [ ] React Native mobile app using the existing REST API
 
 ---

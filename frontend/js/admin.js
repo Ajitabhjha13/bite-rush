@@ -34,6 +34,10 @@ function setupTabs() {
       if (btn.dataset.tab === 'combos') {
         loadCombosAdmin();
       }
+
+      if (btn.dataset.tab === 'reservations') {
+        initReservations();
+      }
     });
   });
 }
@@ -492,4 +496,257 @@ document.addEventListener('DOMContentLoaded', () => {
     const ordersTabVisible = !document.getElementById('ordersTab').classList.contains('d-none');
     if (ordersTabVisible) loadOrders();
   }, 30000);
+
+  // Reservations grid refreshes faster: holds appear/expire within minutes
+  setInterval(() => {
+    const visible = !document.getElementById('reservationsTab').classList.contains('d-none');
+    const modalOpen = document.getElementById('resModal').classList.contains('show');
+    if (visible && !modalOpen) loadReservations();
+  }, 15000);
 });
+
+
+// ===== RESERVATIONS TAB =====
+let resState = { date: null, grid: null, inited: false, selected: null };
+
+function istTodayString() {
+  // en-CA gives YYYY-MM-DD
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+}
+
+function shiftDate(dateStr, days) {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function slotLabel(slot) {
+  const [h, m] = slot.split(':').map(Number);
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+}
+
+function escapeHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+async function adminApi(path, options = {}) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}`, ...(options.headers || {}) }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data.errors && data.errors[0] && data.errors[0].msg) || data.message || 'Something went wrong');
+  return data;
+}
+
+function initReservations() {
+  if (!resState.inited) {
+    resState.inited = true;
+    resState.date = istTodayString();
+    const input = document.getElementById('resDate');
+    input.addEventListener('change', () => { if (input.value) { resState.date = input.value; loadReservations(); } });
+    document.getElementById('resPrevBtn').addEventListener('click', () => setResDate(shiftDate(resState.date, -1)));
+    document.getElementById('resNextBtn').addEventListener('click', () => setResDate(shiftDate(resState.date, 1)));
+    document.getElementById('resTodayBtn').addEventListener('click', () => setResDate(istTodayString()));
+
+    document.getElementById('resGrid').addEventListener('click', (e) => {
+      const cell = e.target.closest('[data-res-id]');
+      if (cell) openReservation(cell.dataset.resId);
+    });
+    document.getElementById('resTables').addEventListener('change', (e) => {
+      const sw = e.target.closest('[data-table-id]');
+      if (sw) toggleTable(sw);
+    });
+    document.getElementById('resPendingRefunds').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-retry-refund]');
+      if (btn) retryRefund(btn);
+    });
+    document.getElementById('resModalFooter').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-res-action]');
+      if (btn) runReservationAction(btn.dataset.resAction);
+    });
+  }
+  document.getElementById('resDate').value = resState.date;
+  loadReservations();
+}
+
+function setResDate(d) {
+  resState.date = d;
+  document.getElementById('resDate').value = d;
+  loadReservations();
+}
+
+async function loadReservations() {
+  try {
+    resState.grid = await adminApi(`/bookings/admin/grid?date=${resState.date}`);
+    renderReservations();
+  } catch (err) {
+    document.getElementById('resGrid').innerHTML =
+      `<tbody><tr><td class="text-center text-danger py-4">${escapeHtml(err.message)}</td></tr></tbody>`;
+  }
+}
+
+function cellClass(c) {
+  if (!c) return 'res-free';
+  if (c.status === 'held') return 'res-held';
+  if (c.attendance === 'seated') return 'res-seated';
+  if (c.attendance === 'no_show') return 'res-noshow';
+  return 'res-confirmed';
+}
+
+function renderReservations() {
+  const g = resState.grid;
+  const s = g.summary;
+  const card = (label, value, icon) => `
+    <div class="col-6 col-lg-3"><div class="res-stat">
+      <div class="res-stat-icon"><i class="bi ${icon}"></i></div>
+      <div><div class="res-stat-value">${value}</div><div class="res-stat-label">${label}</div></div>
+    </div></div>`;
+  document.getElementById('resSummary').innerHTML =
+    card('Confirmed', s.confirmed, 'bi-check-circle') +
+    card('Paying now (held)', s.held, 'bi-hourglass-split') +
+    card('Expected guests', s.expected_guests, 'bi-people') +
+    card('Free online slots', s.free_online_slots, 'bi-grid-3x3-gap');
+
+  document.getElementById('resPendingRefunds').innerHTML = (g.pending_refunds || []).map((p) => `
+    <div class="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-2 py-2">
+      <span><i class="bi bi-exclamation-triangle"></i> Refund of ₹${p.amount / 100} to <strong>${escapeHtml(p.customer || 'customer')}</strong>
+      (T${p.table}, ${slotLabel(p.slot)}) did not go through.</span>
+      <button class="btn btn-sm btn-danger" data-retry-refund="${p.reservation_id}">Retry refund</button>
+    </div>`).join('');
+
+  const head = `<thead><tr><th>Table</th>${g.slots.map((sl) => `<th class="text-center">${slotLabel(sl)}</th>`).join('')}</tr></thead>`;
+  const rows = g.tables.map((t) => {
+    const off = !t.is_active;
+    const badge = off ? '<span class="badge bg-secondary">Off</span>'
+      : t.bookable_online ? '<span class="badge bg-success-subtle text-success-emphasis">Online</span>'
+      : '<span class="badge bg-info-subtle text-info-emphasis">Walk-in</span>';
+    const tds = g.slots.map((sl) => {
+      const c = t.cells[sl];
+      if (!c) return `<td class="res-cell res-free ${off ? 'res-off' : ''}"></td>`;
+      const who = c.status === 'held' ? 'Paying...' : escapeHtml((c.customer && c.customer.name) || 'Guest');
+      const tag = c.attendance === 'seated' ? 'Seated' : c.attendance === 'no_show' ? 'No-show' : `${c.guests} guests`;
+      return `<td class="res-cell ${cellClass(c)}" data-res-id="${c.reservation_id}" role="button">
+        <div class="res-cell-name">${who}</div><div class="res-cell-sub">${tag}</div></td>`;
+    }).join('');
+    return `<tr><th scope="row" class="res-table-head">T${t.number}
+      <div class="small fw-normal text-muted">${t.seats} seats</div>${badge}</th>${tds}</tr>`;
+  }).join('');
+  document.getElementById('resGrid').innerHTML = head + `<tbody>${rows}</tbody>`;
+
+  document.getElementById('resTables').innerHTML = g.tables.map((t) => `
+    <div class="col-6 col-md-4 col-lg-3"><div class="res-table-card ${t.is_active ? '' : 'opacity-50'}">
+      <div class="fw-semibold">T${t.number} <span class="text-muted small">· ${t.seats} seats</span></div>
+      <div class="form-check form-switch mt-1">
+        <input class="form-check-input" type="checkbox" id="tbl-online-${t._id}" data-table-id="${t._id}" data-field="bookable_online" ${t.bookable_online ? 'checked' : ''}>
+        <label class="form-check-label small" for="tbl-online-${t._id}">Online booking</label>
+      </div>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="tbl-active-${t._id}" data-table-id="${t._id}" data-field="is_active" ${t.is_active ? 'checked' : ''}>
+        <label class="form-check-label small" for="tbl-active-${t._id}">In service</label>
+      </div>
+    </div></div>`).join('');
+}
+
+function findCell(id) {
+  for (const t of resState.grid.tables) {
+    for (const sl of resState.grid.slots) {
+      const c = t.cells[sl];
+      if (c && String(c.reservation_id) === String(id)) return { table: t, slot: sl, cell: c };
+    }
+  }
+  return null;
+}
+
+function openReservation(id) {
+  const found = findCell(id);
+  if (!found) return;
+  resState.selected = found;
+  const { table, slot, cell } = found;
+  const isToday = resState.date <= istTodayString();
+  const line = (k, v) => `<div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted">${k}</span><span class="fw-semibold text-end">${v}</span></div>`;
+  const att = cell.attendance === 'seated' ? 'Seated' : cell.attendance === 'no_show' ? 'No-show' : 'Not arrived yet';
+  document.getElementById('resModalBody').innerHTML =
+    line('Table', `T${table.number} (${table.seats} seats)`) +
+    line('Date & time', `${resState.date}, ${slotLabel(slot)}`) +
+    line('Customer', escapeHtml((cell.customer && cell.customer.name) || '—')) +
+    line('Email', escapeHtml((cell.customer && cell.customer.email) || '—')) +
+    line('Guests', cell.guests) +
+    line('Status', cell.status === 'held' ? 'Held, waiting for payment' : 'Confirmed') +
+    line('Deposit', `₹${(cell.amount || 0) / 100} (${escapeHtml(cell.payment_status)})`) +
+    (cell.razorpay_payment_id ? line('Payment id', `<code>${escapeHtml(cell.razorpay_payment_id)}</code>`) : '') +
+    line('Attendance', att);
+
+  let buttons = '';
+  if (cell.status === 'confirmed') {
+    if (isToday && cell.attendance !== 'seated') buttons += '<button class="btn btn-success" data-res-action="seated"><i class="bi bi-person-check"></i> Seated</button>';
+    if (isToday && cell.attendance !== 'no_show') buttons += '<button class="btn btn-outline-secondary" data-res-action="no_show">No-show</button>';
+    if (isToday && cell.attendance !== 'pending') buttons += '<button class="btn btn-link" data-res-action="pending">Undo</button>';
+  }
+  if (cell.attendance !== 'seated') {
+    buttons += `<button class="btn btn-outline-danger ms-auto" data-res-action="cancel">${cell.status === 'confirmed' ? 'Cancel &amp; refund 100%' : 'Release hold'}</button>`;
+  }
+  document.getElementById('resModalFooter').innerHTML = buttons || '<span class="text-muted small">No actions available.</span>';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('resModal')).show();
+}
+
+async function runReservationAction(action) {
+  const sel = resState.selected;
+  if (!sel) return;
+  const id = sel.cell.reservation_id;
+  if (action === 'cancel') {
+    const msg = sel.cell.status === 'confirmed'
+      ? `Cancel this booking and refund ₹${(sel.cell.amount || 0) / 100} to ${(sel.cell.customer && sel.cell.customer.name) || 'the customer'}?`
+      : 'Release this held table?';
+    if (!window.confirm(msg)) return;
+  }
+  const btns = document.querySelectorAll('#resModalFooter button');
+  btns.forEach((b) => { b.disabled = true; });
+  try {
+    if (action === 'cancel') {
+      const out = await adminApi(`/bookings/admin/${id}/cancel`, { method: 'PUT', body: '{}' });
+      const r = out.refund;
+      if (r.status === 'processed') showToast(`Cancelled. ₹${r.amount / 100} refunded.`, 'success');
+      else if (r.status === 'pending') showToast('Cancelled, but the refund failed and needs a retry.', 'error');
+      else showToast('Cancelled.', 'success');
+    } else {
+      await adminApi(`/bookings/admin/${id}/attendance`, { method: 'PUT', body: JSON.stringify({ attendance: action }) });
+      showToast('Updated.', 'success');
+    }
+    bootstrap.Modal.getInstance(document.getElementById('resModal')).hide();
+    await loadReservations();
+  } catch (err) {
+    showToast(err.message, 'error');
+    btns.forEach((b) => { b.disabled = false; });
+  }
+}
+
+async function toggleTable(input) {
+  const body = { [input.dataset.field]: input.checked };
+  input.disabled = true;
+  try {
+    const out = await adminApi(`/tables/${input.dataset.tableId}`, { method: 'PUT', body: JSON.stringify(body) });
+    if (out.upcoming_bookings > 0) {
+      showToast(`Saved. ${out.upcoming_bookings} upcoming booking(s) on this table are unchanged.`, 'info');
+    } else {
+      showToast('Table updated.', 'success');
+    }
+  } catch (err) {
+    input.checked = !input.checked;
+    showToast(err.message, 'error');
+  } finally {
+    input.disabled = false;
+    loadReservations();
+  }
+}
+
+async function retryRefund(btn) {
+  btn.disabled = true;
+  try {
+    const out = await adminApi(`/bookings/admin/${btn.dataset.retryRefund}/retry-refund`, { method: 'PUT', body: '{}' });
+    showToast(`₹${out.refund.amount / 100} refunded.`, 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+  loadReservations();
+}
