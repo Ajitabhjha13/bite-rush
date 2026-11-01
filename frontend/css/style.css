@@ -583,3 +583,25 @@ h1, h2, h3, .navbar-brand, .brand-font {
 
 #reserveTabs .nav-link { color: var(--color-ink); background: #f3f0ea; font-weight: 600; border-radius: 30px; padding: 8px 20px; }
 #reserveTabs .nav-link.active { background: var(--color-ink); color: #fff; }
+
+/* ===== Admin: reservations grid ===== */
+.res-stat { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 14px 16px; }
+.res-stat-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(212,175,55,0.15); color: #9a7b0a; display: grid; place-items: center; font-size: 1.2rem; }
+.res-stat-value { font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
+.res-stat-label { font-size: 0.8rem; color: #777; }
+.res-grid { min-width: 640px; background: #fff; }
+.res-grid th { font-weight: 600; font-size: 0.85rem; }
+.res-table-head { white-space: nowrap; min-width: 92px; }
+.res-cell { height: 58px; min-width: 104px; padding: 4px 8px !important; font-size: 0.8rem; }
+.res-cell[data-res-id] { cursor: pointer; }
+.res-cell[data-res-id]:hover { filter: brightness(0.96); }
+.res-cell-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+.res-cell-sub { color: #555; }
+.res-free { --bs-table-bg: #f6fbf6; background: #f6fbf6; }
+.res-held { --bs-table-bg: #fff4d6; background: #fff4d6; }
+.res-confirmed { --bs-table-bg: #d9eefc; background: #d9eefc; }
+.res-seated { --bs-table-bg: #d6f2de; background: #d6f2de; }
+.res-noshow { --bs-table-bg: #eee; background: #eee; color: #777; }
+.res-off { --bs-table-bg: #f3f3f3; background: repeating-linear-gradient(45deg, #f3f3f3, #f3f3f3 6px, #eaeaea 6px, #eaeaea 12px); }
+.res-dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid #ccc; vertical-align: -1px; margin-right: 4px; }
+.res-table-card { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 10px 12px; }

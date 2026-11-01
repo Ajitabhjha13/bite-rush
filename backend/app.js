@@ -9,6 +9,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const comboRoutes = require('./routes/comboRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const tableRoutes = require('./routes/tableRoutes');
 
 const app = express();
 
@@ -28,5 +29,6 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/combos', comboRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/tables', tableRoutes);
 
 module.exports = app;

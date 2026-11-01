@@ -34,7 +34,9 @@ const reservationSchema = new mongoose.Schema({
   refund_status: { type: String, enum: ['none', 'processing', 'done', 'failed'], default: 'none' },
   refund_id: { type: String, default: null },
   refund_amount: { type: Number, default: 0 }, // paise
-  refunded_at: { type: Date, default: null }
+  refunded_at: { type: Date, default: null },
+  // Restaurant-side check-in on the day (only meaningful for confirmed bookings)
+  attendance: { type: String, enum: ['pending', 'seated', 'no_show'], default: 'pending' }
 }, { timestamps: true });
 
 reservationSchema.pre('validate', function () {

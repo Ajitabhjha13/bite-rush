@@ -35,6 +35,9 @@
         <button class="btn admin-nav-btn text-start" data-tab="combos">
           <i class="bi bi-box-seam"></i> Combo Management
         </button>
+        <button class="btn admin-nav-btn text-start" data-tab="reservations">
+          <i class="bi bi-calendar2-check"></i> Reservations
+        </button>
       </div>
     </div>
 
@@ -101,6 +104,39 @@
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- RESERVATIONS TAB -->
+        <div id="reservationsTab" class="admin-tab d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h3 class="fw-bold mb-0"><i class="bi bi-calendar2-check"></i> Reservations</h3>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-outline-secondary btn-sm" id="resPrevBtn" aria-label="Previous day"><i class="bi bi-chevron-left"></i></button>
+              <input type="date" class="form-control form-control-sm" id="resDate" style="width:auto">
+              <button class="btn btn-outline-secondary btn-sm" id="resNextBtn" aria-label="Next day"><i class="bi bi-chevron-right"></i></button>
+              <button class="btn btn-outline-warning btn-sm" id="resTodayBtn">Today</button>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3" id="resSummary"></div>
+
+          <div class="res-legend small text-muted mb-2">
+            <span class="res-dot res-free"></span> Free
+            <span class="res-dot res-held ms-3"></span> Held (paying)
+            <span class="res-dot res-confirmed ms-3"></span> Confirmed
+            <span class="res-dot res-seated ms-3"></span> Seated
+            <span class="res-dot res-noshow ms-3"></span> No-show
+          </div>
+
+          <div class="table-responsive mb-4">
+            <table class="table table-bordered align-middle res-grid mb-0" id="resGrid">
+              <tbody><tr><td class="text-center text-muted py-4">Loading...</td></tr></tbody>
+            </table>
+          </div>
+
+          <h5 class="fw-bold">Tables</h5>
+          <p class="text-muted small">Online tables can be booked by customers. Walk-in tables are kept for people who just show up.</p>
+          <div id="resTables" class="row g-2"></div>
         </div>
 
         <!-- COMBO MANAGEMENT TAB -->
@@ -242,6 +278,20 @@
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-warning fw-semibold" id="saveComboBtn">Save</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reservation detail modal -->
+  <div class="modal fade" id="resModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Booking details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="resModalBody"></div>
+        <div class="modal-footer flex-wrap" id="resModalFooter"></div>
       </div>
     </div>
   </div>
