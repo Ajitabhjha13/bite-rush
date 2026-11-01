@@ -1,7 +1,5 @@
 // Idempotent: upserts tables by number. Safe to run more than once.
 // Usage: node seedTables.js   (needs MONGO_URI in .env)
-const dotenv = require('dotenv');
-dotenv.config({ quiet: true });
 const mongoose = require('mongoose');
 const Table = require('./models/Table');
 
@@ -31,6 +29,7 @@ async function seed(connect = true) {
 }
 
 if (require.main === module) {
+  require('dotenv').config({ quiet: true }); // only when run as a script, never when imported by tests
   seed().then((n) => { console.log(`✅ Tables ready: ${n}`); })
     .catch((e) => { console.error('❌', e.message); process.exit(1); });
 }
