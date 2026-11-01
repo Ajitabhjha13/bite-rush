@@ -14,6 +14,8 @@ async function getGrid(date, now = new Date()) {
     Table.find().sort({ number: 1 }).lean(),
     Reservation.find({ date, is_active: true }).populate('user', 'name email').lean()
   ]);
+  const failed = await Reservation.find({ date, status: 'cancelled', refund_status: 'failed' })
+    .populate('user', 'name').populate('table', 'number').lean();
 
   const byCell = new Map(reservations.map((r) => [`${r.table}|${r.slot}`, r]));
   const onlineIds = new Set(tables.filter((t) => t.bookable_online && t.is_active).map((t) => String(t._id)));
@@ -48,6 +50,10 @@ async function getGrid(date, now = new Date()) {
     date,
     slots: booking.SLOTS,
     tables: rows,
+    pending_refunds: failed.map((r) => ({
+      reservation_id: r._id, customer: r.user && r.user.name, table: r.table && r.table.number,
+      slot: r.slot, amount: r.amount
+    })),
     summary: { confirmed, held, expected_guests: guests, free_online_slots: freeOnline }
   };
 }
@@ -91,10 +97,28 @@ async function adminCancel({ reservationId }) {
       refund.amount = done.amount || 0;
       refund.status = 'processed';
     } catch (e) {
+      console.error('[admin cancel] refund failed:', reservationId, e && (e.error ? JSON.stringify(e.error) : e.message));
       refund.status = 'pending'; // flagged refund_status:'failed' for a retry
     }
   }
   return { reservation: await Reservation.findById(r._id), refund };
+}
+
+// Retry a refund that failed earlier (booking is already cancelled).
+async function retryRefund({ reservationId }) {
+  const r = await Reservation.findById(reservationId);
+  if (!r) throw new BookingError(404, 'Booking not found.');
+  if (r.status !== 'cancelled' || r.refund_status !== 'failed' || !r.razorpay_payment_id) {
+    throw new BookingError(409, 'There is no failed refund to retry on this booking.');
+  }
+  try {
+    const done = await refundPayment({ reservationId: r._id, paymentId: r.razorpay_payment_id, percent: 100, reason: 'restaurant_cancelled' });
+    return { refund: { percent: 100, amount: done.amount || 0, status: 'processed' } };
+  } catch (e) {
+    const detail = e && (e.error && e.error.description ? e.error.description : e.message);
+    console.error('[retry refund] failed:', reservationId, e && (e.error ? JSON.stringify(e.error) : e.message));
+    throw new BookingError(502, `Razorpay refused the refund: ${detail || 'unknown error'}`);
+  }
 }
 
 // Move a table between the online pool and walk-in only, or switch it off.
@@ -108,4 +132,4 @@ async function updateTable({ tableId, bookable_online, is_active }) {
   return { table, upcoming_bookings: upcoming };
 }
 
-module.exports = { getGrid, setAttendance, adminCancel, updateTable };
+module.exports = { getGrid, setAttendance, adminCancel, retryRefund, updateTable };

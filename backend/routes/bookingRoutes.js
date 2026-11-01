@@ -18,5 +18,6 @@ router.put('/:id/cancel', protect, v.cancelBookingValidation, handleValidationEr
 router.get('/admin/grid', protect, adminOnly, av.gridValidation, handleValidationErrors, admin.getGrid);
 router.put('/admin/:id/attendance', protect, adminOnly, av.attendanceValidation, handleValidationErrors, admin.setAttendance);
 router.put('/admin/:id/cancel', protect, adminOnly, av.adminCancelValidation, handleValidationErrors, admin.adminCancel);
+router.put('/admin/:id/retry-refund', protect, adminOnly, av.adminCancelValidation, handleValidationErrors, admin.retryRefund);
 
 module.exports = router;

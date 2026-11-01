@@ -557,6 +557,10 @@ function initReservations() {
       const sw = e.target.closest('[data-table-id]');
       if (sw) toggleTable(sw);
     });
+    document.getElementById('resPendingRefunds').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-retry-refund]');
+      if (btn) retryRefund(btn);
+    });
     document.getElementById('resModalFooter').addEventListener('click', (e) => {
       const btn = e.target.closest('[data-res-action]');
       if (btn) runReservationAction(btn.dataset.resAction);
@@ -603,6 +607,13 @@ function renderReservations() {
     card('Paying now (held)', s.held, 'bi-hourglass-split') +
     card('Expected guests', s.expected_guests, 'bi-people') +
     card('Free online slots', s.free_online_slots, 'bi-grid-3x3-gap');
+
+  document.getElementById('resPendingRefunds').innerHTML = (g.pending_refunds || []).map((p) => `
+    <div class="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-2 py-2">
+      <span><i class="bi bi-exclamation-triangle"></i> Refund of ₹${p.amount / 100} to <strong>${escapeHtml(p.customer || 'customer')}</strong>
+      (T${p.table}, ${slotLabel(p.slot)}) did not go through.</span>
+      <button class="btn btn-sm btn-danger" data-retry-refund="${p.reservation_id}">Retry refund</button>
+    </div>`).join('');
 
   const head = `<thead><tr><th>Table</th>${g.slots.map((sl) => `<th class="text-center">${slotLabel(sl)}</th>`).join('')}</tr></thead>`;
   const rows = g.tables.map((t) => {
@@ -727,4 +738,15 @@ async function toggleTable(input) {
     input.disabled = false;
     loadReservations();
   }
+}
+
+async function retryRefund(btn) {
+  btn.disabled = true;
+  try {
+    const out = await adminApi(`/bookings/admin/${btn.dataset.retryRefund}/retry-refund`, { method: 'PUT', body: '{}' });
+    showToast(`₹${out.refund.amount / 100} refunded.`, 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+  loadReservations();
 }

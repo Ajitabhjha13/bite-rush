@@ -185,6 +185,39 @@ describe('restaurant cancel', () => {
   });
 });
 
+describe('retry failed refund', () => {
+  test('failed refund shows in grid, retry succeeds once, never twice', async () => {
+    const { token } = await admin();
+    const { user } = await db.createUser();
+    const d = addDays(istToday(), 2);
+    const r = await makeBooking({ user, date: d });
+    fake.payments.refund.mockRejectedValueOnce(new Error('down'));
+    await request(app).put(`/api/bookings/admin/${r._id}/cancel`).set(bearer(token)).send({});
+    const grid = await request(app).get(`/api/bookings/admin/grid?date=${d}`).set(bearer(token));
+    expect(grid.body.pending_refunds).toHaveLength(1);
+
+    const url = `/api/bookings/admin/${r._id}/retry-refund`;
+    const ok = await request(app).put(url).set(bearer(token)).send({});
+    expect(ok.status).toBe(200);
+    expect(ok.body.refund).toMatchObject({ amount: 10000, status: 'processed' });
+    expect((await request(app).put(url).set(bearer(token)).send({})).status).toBe(409);
+    expect(fake.payments.refund).toHaveBeenCalledTimes(2);
+    const grid2 = await request(app).get(`/api/bookings/admin/grid?date=${d}`).set(bearer(token));
+    expect(grid2.body.pending_refunds).toHaveLength(0);
+  });
+
+  test('retry that fails again returns 502 with Razorpay reason', async () => {
+    const { token } = await admin();
+    const { user } = await db.createUser();
+    const r = await makeBooking({ user, date: addDays(istToday(), 2) });
+    fake.payments.refund.mockRejectedValue({ error: { description: 'Payment already refunded' } });
+    await request(app).put(`/api/bookings/admin/${r._id}/cancel`).set(bearer(token)).send({});
+    const res = await request(app).put(`/api/bookings/admin/${r._id}/retry-refund`).set(bearer(token)).send({});
+    expect(res.status).toBe(502);
+    expect(res.body.message).toMatch(/already refunded/);
+  });
+});
+
 describe('table toggles', () => {
   test('moving a table out of the online pool shrinks public availability', async () => {
     const { token } = await admin();

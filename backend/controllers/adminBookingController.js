@@ -26,6 +26,10 @@ const adminCancel = handle(async (req, res) => {
   res.status(200).json({ message: 'Booking cancelled by the restaurant.', reservation, refund });
 });
 
+const retryRefund = handle(async (req, res) => {
+  res.status(200).json({ message: 'Refund processed.', ...(await svc.retryRefund({ reservationId: req.params.id })) });
+});
+
 const updateTable = handle(async (req, res) => {
   const out = await svc.updateTable({
     tableId: req.params.id, bookable_online: req.body.bookable_online, is_active: req.body.is_active
@@ -33,4 +37,4 @@ const updateTable = handle(async (req, res) => {
   res.status(200).json({ message: 'Table updated.', ...out });
 });
 
-module.exports = { getGrid, setAttendance, adminCancel, updateTable };
+module.exports = { getGrid, setAttendance, adminCancel, retryRefund, updateTable };
