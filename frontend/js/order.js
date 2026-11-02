@@ -176,6 +176,8 @@ async function cancelOrder(orderId) {
 }
 
 // Load order history from API
+let historyPage = 1;
+
 async function loadOrderHistory() {
   const container = document.getElementById('orderHistoryList');
 
@@ -190,15 +192,22 @@ async function loadOrderHistory() {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/my`, {
+    const res = await fetch(`${API_BASE_URL}/orders/my?page=${historyPage}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     });
 
-    const orders = await res.json();
+    const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(orders.message || 'Failed to load orders');
+      throw new Error(data.message || 'Failed to load orders');
     }
+
+    const orders = data.items;
+    if (orders.length === 0 && data.page > 1) {
+      historyPage = data.pages;
+      return loadOrderHistory();
+    }
+    renderPager('historyPager', container, data, (p) => { historyPage = p; loadOrderHistory(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
     if (orders.length === 0) {
       container.innerHTML = `

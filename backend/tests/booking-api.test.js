@@ -44,8 +44,9 @@ describe('Booking API', () => {
     expect(c.body.reservation.status).toBe('confirmed');
 
     const my = await request(app).get('/api/bookings/my').set(auth);
-    expect(my.body).toHaveLength(1);
-    expect(my.body[0].table.seats).toBe(4); // 3 guests -> 4-seater
+    expect(my.body.items).toHaveLength(1);
+    expect(my.body.total).toBe(1);
+    expect(my.body.items[0].table.seats).toBe(4); // 3 guests -> 4-seater
   });
 
   test('Idempotency-Key header: retry returns the same booking (200)', async () => {
