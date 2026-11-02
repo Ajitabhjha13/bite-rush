@@ -2,12 +2,16 @@ const crypto = require('crypto');
 const pay = require('../services/paymentService');
 const WebhookEvent = require('../models/WebhookEvent');
 
+// One line per webhook so Render's logs show what Razorpay sent and what we did (no secrets, no payloads).
+const log = (...a) => { if (process.env.NODE_ENV !== 'test') console.log('[webhook]', ...a); };
+
 // POST /api/payments/webhook  (body is a raw Buffer, see routes/paymentRoutes.js)
 const webhook = async (req, res) => {
   const raw = req.body;
   if (!Buffer.isBuffer(raw)) return res.status(400).json({ message: 'Invalid body' });
 
   if (!pay.verifyWebhookSignature(raw, req.get('x-razorpay-signature'))) {
+    log('rejected: invalid signature');
     return res.status(400).json({ message: 'Invalid signature' });
   }
 
@@ -21,15 +25,17 @@ const webhook = async (req, res) => {
   } catch (e) {
     if (e.code !== 11000) return res.status(500).json({ message: 'Server error' });
     const seen = await WebhookEvent.findOne({ event_id: eventId });
-    if (seen && seen.processed) return res.status(200).json({ status: 'duplicate' });
+    if (seen && seen.processed) { log(event.event, eventId, '-> duplicate, already processed'); return res.status(200).json({ status: 'duplicate' }); }
     // seen but never finished (e.g. earlier crash) -> process again; it is idempotent
   }
 
   try {
-    await pay.handleWebhookEvent(event);
+    const result = await pay.handleWebhookEvent(event);
+    log(event.event, eventId, '->', (result && (result.outcome || (result.ignored && 'ignored'))) || 'done');
     await WebhookEvent.updateOne({ event_id: eventId }, { $set: { processed: true } });
     res.status(200).json({ status: 'ok' });
   } catch (err) {
+    log(event.event, eventId, '-> FAILED:', err && err.message);
     // non-2xx makes Razorpay retry later
     res.status(500).json({ message: 'Processing failed, please retry' });
   }
