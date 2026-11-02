@@ -54,8 +54,54 @@
             <span>Total:</span>
             <span id="checkoutTotal">₹0</span>
           </div>
+
+          <h5 class="fw-bold mt-4 mb-1">Delivery details</h5>
+          <p class="text-muted small mb-3">We deliver within Vadodara city only (pincodes 390001 to 390025).</p>
+          <form id="deliveryForm" novalidate>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="delName">Name of the person receiving</label>
+                <input type="text" class="form-control" id="delName" name="name" maxlength="60" autocomplete="name" required>
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="delPhone">Mobile number</label>
+                <input type="tel" class="form-control" id="delPhone" name="phone" inputmode="numeric" maxlength="16" autocomplete="tel" placeholder="10-digit number" required>
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="delAddress">Flat, building and street</label>
+                <input type="text" class="form-control" id="delAddress" name="address_line" maxlength="120" autocomplete="address-line1" required>
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="delArea">Area</label>
+                <input type="text" class="form-control" id="delArea" name="area" maxlength="60" autocomplete="address-line2" placeholder="For example, Alkapuri" required>
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="delLandmark">Landmark <span class="text-muted">(optional)</span></label>
+                <input type="text" class="form-control" id="delLandmark" name="landmark" maxlength="80">
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="delPincode">Pincode</label>
+                <input type="text" class="form-control" id="delPincode" name="pincode" inputmode="numeric" maxlength="6" autocomplete="postal-code" required>
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="delCity">City</label>
+                <input type="text" class="form-control" id="delCity" value="Vadodara, Gujarat" disabled>
+              </div>
+            </div>
+          </form>
+
+          <div class="border rounded p-3 mt-4 bg-light">
+            <div class="fw-semibold">Payment: cash on delivery</div>
+            <div class="text-muted small">Pay the delivery person when your order arrives.</div>
+          </div>
+
           <div id="checkoutError" class="alert alert-danger d-none mt-3"></div>
-          <p class="text-muted small mb-0 mt-3"><i class="bi bi-truck text-warning me-1"></i> Delivering only within Vadodara city.</p>
           <button class="btn btn-warning w-100 fw-semibold py-2 mt-3" id="placeOrderBtn">
             Confirm & Place Order <i class="bi bi-check-circle ms-1"></i>
           </button>
@@ -81,7 +127,8 @@
           <h3 class="fw-bold mt-3">Order Placed Successfully!</h3>
           <p class="text-muted">Order ID: <span id="confirmOrderId" class="fw-semibold"></span></p>
           <p class="text-muted">Total Amount: <span id="confirmTotal" class="fw-semibold"></span></p>
-          <p class="text-muted mb-4">Estimated Delivery: <span class="fw-semibold">30-40 minutes</span></p>
+          <p class="text-muted mb-1">Delivering to: <span id="confirmAddress" class="fw-semibold"></span></p>
+          <p class="text-muted mb-4">Payment: <span class="fw-semibold">Cash on delivery</span></p>
 
           <!-- Status Tracker Bar -->
           <div id="confirmStatusTracker"></div>

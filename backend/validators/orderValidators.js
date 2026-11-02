@@ -1,6 +1,35 @@
 const { body, param } = require('express-validator');
+const { isServiceablePincode, normalizePhone } = require('../config/delivery');
+
+const text = (field, label, min, max) => body(field)
+  .isString().withMessage(`${label} is required.`).bail()
+  .trim()
+  .isLength({ min, max }).withMessage(`${label} must be ${min} to ${max} characters.`);
+
+const deliveryValidation = [
+  body('delivery').isObject().withMessage('Delivery details are required.'),
+  text('delivery.name', 'Name of the person receiving the order', 2, 60),
+  body('delivery.phone')
+    .isString().withMessage('Phone number is required.').bail()
+    .customSanitizer(normalizePhone)
+    .matches(/^[6-9]\d{9}$/).withMessage('Enter a valid 10-digit mobile number.'),
+  text('delivery.address_line', 'Address (flat, building, street)', 5, 120),
+  text('delivery.area', 'Area', 2, 60),
+  body('delivery.landmark')
+    .optional({ checkFalsy: true })
+    .isString().withMessage('Landmark must be text.').bail()
+    .trim()
+    .isLength({ max: 80 }).withMessage('Landmark must be at most 80 characters.'),
+  body('delivery.pincode')
+    .isString().withMessage('Pincode is required.').bail()
+    .trim()
+    .matches(/^\d{6}$/).withMessage('Enter a 6-digit pincode.').bail()
+    .custom(isServiceablePincode).withMessage('Sorry, we deliver only within Vadodara (pincodes 390001 to 390025).')
+];
 
 const placeOrderValidation = [
+  ...deliveryValidation,
+
   body('cart_items')
     .isArray({ min: 1 }).withMessage('Cart must contain at least one item.'),
 

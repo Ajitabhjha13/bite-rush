@@ -24,6 +24,71 @@ function renderStatusTracker(currentStatus) {
   `;
 }
 
+
+// ===== DELIVERY DETAILS =====
+// The server is the authority on every rule below; these checks only give instant feedback.
+const DELIVERY_PIN_MIN = 390001;
+const DELIVERY_PIN_MAX = 390025;
+
+function escapeText(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function normalizePhone(value) {
+  let d = String(value || '').replace(/[\s\-().]/g, '');
+  if (d.startsWith('+91')) d = d.slice(3);
+  else if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
+  else if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
+  return d;
+}
+
+const DELIVERY_FIELDS = {
+  name: 'delName', phone: 'delPhone', address_line: 'delAddress',
+  area: 'delArea', landmark: 'delLandmark', pincode: 'delPincode'
+};
+
+function readDelivery() {
+  const v = (id) => document.getElementById(id).value.trim();
+  return {
+    name: v('delName'), phone: normalizePhone(v('delPhone')), address_line: v('delAddress'),
+    area: v('delArea'), landmark: v('delLandmark'), pincode: v('delPincode')
+  };
+}
+
+function setFieldError(inputId, message) {
+  const input = document.getElementById(inputId);
+  input.classList.toggle('is-invalid', Boolean(message));
+  const fb = input.parentElement.querySelector('.invalid-feedback');
+  if (fb) fb.textContent = message || '';
+}
+
+function validateDelivery(d) {
+  const errors = {};
+  if (d.name.length < 2) errors.name = 'Enter the name of the person receiving the order.';
+  if (!/^[6-9]\d{9}$/.test(d.phone)) errors.phone = 'Enter a valid 10-digit mobile number.';
+  if (d.address_line.length < 5) errors.address_line = 'Enter your flat, building and street.';
+  if (d.area.length < 2) errors.area = 'Enter your area.';
+  if (d.landmark.length > 80) errors.landmark = 'Landmark must be at most 80 characters.';
+  if (!/^\d{6}$/.test(d.pincode)) {
+    errors.pincode = 'Enter a 6-digit pincode.';
+  } else if (Number(d.pincode) < DELIVERY_PIN_MIN || Number(d.pincode) > DELIVERY_PIN_MAX) {
+    errors.pincode = 'Sorry, we deliver only within Vadodara (pincodes 390001 to 390025).';
+  }
+  return errors;
+}
+
+function showDeliveryErrors(errors) {
+  Object.entries(DELIVERY_FIELDS).forEach(([key, id]) => setFieldError(id, errors[key]));
+  const first = Object.keys(errors)[0];
+  if (first) document.getElementById(DELIVERY_FIELDS[first]).focus();
+}
+
+function formatAddress(d) {
+  if (!d || !d.address_line) return '';
+  const parts = [d.address_line, d.area, d.landmark ? `Landmark: ${d.landmark}` : '', `${d.city || 'Vadodara'} ${d.pincode || ''}`.trim()];
+  return parts.filter(Boolean).join(', ');
+}
+
 // Show checkout panel if cart has items and user is logged in.
 // If cart has items but user ISN'T logged in, show a clear "please login" panel
 // instead of silently hiding everything (which looked like the cart was empty).
@@ -57,6 +122,10 @@ function renderCheckoutPanel() {
   `).join('');
 
   totalEl.textContent = `₹${getCartTotal()}`;
+
+  const nameInput = document.getElementById('delName');
+  const user = getCurrentUser();
+  if (nameInput && !nameInput.value && user && user.name) nameInput.value = user.name;
 }
 
 // Place the order via API
@@ -75,6 +144,17 @@ async function placeOrder() {
   }
 
   errorBox.classList.add('d-none');
+  delete errorBox.dataset.kind;
+  const delivery = readDelivery();
+  const problems = validateDelivery(delivery);
+  showDeliveryErrors(problems);
+  if (Object.keys(problems).length > 0) {
+    errorBox.textContent = 'Please fix the highlighted delivery details.';
+    errorBox.dataset.kind = 'fields'; // hidden again as soon as every highlighted field is fixed
+    errorBox.classList.remove('d-none');
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = 'Placing order...';
 
@@ -93,15 +173,26 @@ async function placeOrder() {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${getToken()}`
       },
-      body: JSON.stringify({ cart_items })
+      body: JSON.stringify({ cart_items, delivery })
     });
 
     const data = await res.json();
 
     if (!res.ok) {
+      // Point at the exact field the server rejected, if it says which one.
+      const serverErrors = {};
+      (data.errors || []).forEach((e) => {
+        const key = String(e.field || '').replace('delivery.', '');
+        if (DELIVERY_FIELDS[key] && !serverErrors[key]) serverErrors[key] = e.message;
+      });
+      if (Object.keys(serverErrors).length > 0) {
+        showDeliveryErrors(serverErrors);
+        errorBox.dataset.kind = 'fields';
+      }
       throw new Error(data.message || 'Failed to place order');
     }
 
+    document.getElementById('confirmAddress').textContent = formatAddress({ ...delivery, city: 'Vadodara' });
     document.getElementById('checkoutPanel').classList.add('d-none');
     document.getElementById('confirmationPanel').classList.remove('d-none');
     document.getElementById('confirmOrderId').textContent = data.order_id;
@@ -236,6 +327,11 @@ async function loadOrderHistory() {
               return `${label}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`;
             }).join(', ')}
           </div>
+          ${order.delivery && order.delivery.address_line ? `
+            <div class="mt-2 small text-muted">
+              Delivering to ${escapeText(order.delivery.name)}, ${escapeText(formatAddress(order.delivery))}. Phone ${escapeText(order.delivery.phone)}. Cash on delivery.
+            </div>
+          ` : ''}
           <div class="mt-3 d-flex gap-2">
             <button class="btn btn-outline-warning btn-sm order-again-btn" data-order-id="${order._id}">
               <i class="bi bi-arrow-repeat"></i> Order Again
@@ -274,6 +370,21 @@ async function loadOrderHistory() {
 document.addEventListener('DOMContentLoaded', () => {
   renderCheckoutPanel();
   loadOrderHistory();
+
+  Object.values(DELIVERY_FIELDS).forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => {
+        setFieldError(id, '');
+        // Once nothing is highlighted any more, the "please fix" message has done its job.
+        const errorBox = document.getElementById('checkoutError');
+        if (errorBox.dataset.kind === 'fields' && !document.querySelector('#deliveryForm .is-invalid')) {
+          errorBox.classList.add('d-none');
+          delete errorBox.dataset.kind;
+        }
+      });
+    }
+  });
 
   const placeOrderBtn = document.getElementById('placeOrderBtn');
   if (placeOrderBtn) {
