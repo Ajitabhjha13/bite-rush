@@ -144,11 +144,13 @@ async function placeOrder() {
   }
 
   errorBox.classList.add('d-none');
+  delete errorBox.dataset.kind;
   const delivery = readDelivery();
   const problems = validateDelivery(delivery);
   showDeliveryErrors(problems);
   if (Object.keys(problems).length > 0) {
     errorBox.textContent = 'Please fix the highlighted delivery details.';
+    errorBox.dataset.kind = 'fields'; // hidden again as soon as every highlighted field is fixed
     errorBox.classList.remove('d-none');
     return;
   }
@@ -183,7 +185,10 @@ async function placeOrder() {
         const key = String(e.field || '').replace('delivery.', '');
         if (DELIVERY_FIELDS[key] && !serverErrors[key]) serverErrors[key] = e.message;
       });
-      if (Object.keys(serverErrors).length > 0) showDeliveryErrors(serverErrors);
+      if (Object.keys(serverErrors).length > 0) {
+        showDeliveryErrors(serverErrors);
+        errorBox.dataset.kind = 'fields';
+      }
       throw new Error(data.message || 'Failed to place order');
     }
 
@@ -368,7 +373,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   Object.values(DELIVERY_FIELDS).forEach((id) => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('input', () => setFieldError(id, ''));
+    if (el) {
+      el.addEventListener('input', () => {
+        setFieldError(id, '');
+        // Once nothing is highlighted any more, the "please fix" message has done its job.
+        const errorBox = document.getElementById('checkoutError');
+        if (errorBox.dataset.kind === 'fields' && !document.querySelector('#deliveryForm .is-invalid')) {
+          errorBox.classList.add('d-none');
+          delete errorBox.dataset.kind;
+        }
+      });
+    }
   });
 
   const placeOrderBtn = document.getElementById('placeOrderBtn');
