@@ -44,6 +44,15 @@ function setupTabs() {
 
 // ===== ORDERS TAB =====
 let ordersPage = 1;
+
+// "Riya Sharma / 98765 43210 / address" for the kitchen. Older orders have no address.
+function deliveryCell(d) {
+  if (!d || !d.address_line) return '<span class="text-muted">No address (older order)</span>';
+  const where = [d.address_line, d.area, d.landmark ? `Landmark: ${d.landmark}` : '', `${d.city || ''} ${d.pincode || ''}`.trim()].filter(Boolean).join(', ');
+  return `<div class="fw-semibold">${escapeHtml(d.name)}</div>
+    <div><a class="text-decoration-none" href="tel:+91${escapeHtml(d.phone)}">${escapeHtml(d.phone)}</a></div>
+    <div class="text-muted">${escapeHtml(where)}</div>`;
+}
 let menuPage = 1;
 
 async function loadOrders(isInitialLoad = false) {
@@ -51,7 +60,7 @@ async function loadOrders(isInitialLoad = false) {
 
   if (isInitialLoad) {
     tbody.innerHTML = `
-      <tr><td colspan="6" class="text-center py-4">
+      <tr><td colspan="7" class="text-center py-4">
         <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
         <span class="text-muted ms-2">Loading orders...</span>
       </td></tr>
@@ -74,7 +83,7 @@ async function loadOrders(isInitialLoad = false) {
     renderPager('ordersPager', tbody.closest('.table-responsive'), data, (p) => { ordersPage = p; loadOrders(true); });
 
     if (orders.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No orders yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No orders yet.</td></tr>';
       return;
     }
 
@@ -86,6 +95,7 @@ async function loadOrders(isInitialLoad = false) {
           const label = oi.combo ? `${oi.combo.name} (Combo)` : (oi.item ? oi.item.name : 'Item');
           return `${label}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`;
         }).join(', ')}</td>
+        <td class="small">${deliveryCell(order.delivery)}</td>
         <td class="fw-semibold">₹${order.total_amount}</td>
         <td>
           <select class="form-select form-select-sm admin-status-select" data-order-id="${order._id}">
@@ -105,7 +115,7 @@ async function loadOrders(isInitialLoad = false) {
     });
 
   } catch (error) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${error.message}</td></tr>`;
   }
 }
 

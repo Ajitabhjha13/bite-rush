@@ -4,12 +4,13 @@ const MenuItem = require('../models/MenuItem');
 const Combo = require('../models/Combo');
 const { parsePagination, pageResult } = require('../utils/paginate');
 const limits = require('../config/limits');
+const { DELIVERY_CITY } = require('../config/delivery');
 
 // @route   POST /api/orders
 // @desc    Place a new order (customer)
 const placeOrder = async (req, res) => {
   try {
-    const { cart_items } = req.body; // [{ type: 'item'|'combo', item_id/combo_id, quantity }, ...]
+    const { cart_items, delivery: d } = req.body; // [{ type: 'item'|'combo', item_id/combo_id, quantity }, ...]
 
     if (!cart_items || cart_items.length === 0) {
       return res.status(400).json({ message: 'Cart is empty' });
@@ -73,7 +74,18 @@ const placeOrder = async (req, res) => {
     const order = await Order.create({
       user: req.user._id,
       total_amount: total,
-      status: 'Received'
+      status: 'Received',
+      // Copy only the known fields (already validated and trimmed); the city is ours, not the client's.
+      delivery: {
+        name: d.name,
+        phone: d.phone,
+        address_line: d.address_line,
+        area: d.area,
+        landmark: d.landmark || '',
+        pincode: d.pincode,
+        city: DELIVERY_CITY
+      },
+      payment_method: 'cod'
     });
 
     // Create order items linked to this order
@@ -87,7 +99,8 @@ const placeOrder = async (req, res) => {
       message: 'Order placed successfully!',
       order_id: order._id,
       total_amount: order.total_amount,
-      status: order.status
+      status: order.status,
+      payment_method: order.payment_method
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
