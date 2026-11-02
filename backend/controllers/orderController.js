@@ -2,6 +2,8 @@ const Order = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
 const MenuItem = require('../models/MenuItem');
 const Combo = require('../models/Combo');
+const { parsePagination, pageResult } = require('../utils/paginate');
+const limits = require('../config/limits');
 
 // @route   POST /api/orders
 // @desc    Place a new order (customer)
@@ -92,44 +94,47 @@ const placeOrder = async (req, res) => {
   }
 };
 
-// @route   GET /api/orders/my
-// @desc    Get logged-in user's order history
+// Attach order items to a page of orders with ONE query (instead of one query per order).
+async function attachItems(orders, itemFields, comboFields) {
+  const ids = orders.map((o) => o._id);
+  const items = await OrderItem.find({ order: { $in: ids } })
+    .populate('item', itemFields)
+    .populate('combo', comboFields);
+  const byOrder = new Map();
+  for (const it of items) {
+    const key = String(it.order);
+    if (!byOrder.has(key)) byOrder.set(key, []);
+    byOrder.get(key).push(it);
+  }
+  return orders.map((o) => ({ ...o.toObject(), items: byOrder.get(String(o._id)) || [] }));
+}
+
+// @route   GET /api/orders/my?page=&limit=
+// @desc    Get logged-in user's order history (paginated)
 const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
-
-    // Attach order items to each order
-    const ordersWithItems = await Promise.all(
-      orders.map(async (order) => {
-        const items = await OrderItem.find({ order: order._id })
-          .populate('item', 'name image_url')
-          .populate('combo', 'name image_url');
-        return { ...order.toObject(), items };
-      })
-    );
-
-    res.status(200).json(ordersWithItems);
+    const pg = parsePagination(req.query, limits.pageSize.myOrders);
+    const filter = { user: req.user._id };
+    const [orders, total] = await Promise.all([
+      Order.find(filter).sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit),
+      Order.countDocuments(filter)
+    ]);
+    res.status(200).json(pageResult(await attachItems(orders, 'name image_url', 'name image_url'), total, pg));
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-// @route   GET /api/orders/admin/all
-// @desc    Get all orders (admin)
+// @route   GET /api/orders/admin/all?page=&limit=
+// @desc    Get all orders (admin, paginated)
 const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate('user', 'name email').sort({ createdAt: -1 });
-
-    const ordersWithItems = await Promise.all(
-      orders.map(async (order) => {
-        const items = await OrderItem.find({ order: order._id })
-          .populate('item', 'name price')
-          .populate('combo', 'name');
-        return { ...order.toObject(), items };
-      })
-    );
-
-    res.status(200).json(ordersWithItems);
+    const pg = parsePagination(req.query, limits.pageSize.adminOrders);
+    const [orders, total] = await Promise.all([
+      Order.find().populate('user', 'name email').sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit),
+      Order.countDocuments()
+    ]);
+    res.status(200).json(pageResult(await attachItems(orders, 'name price', 'name'), total, pg));
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

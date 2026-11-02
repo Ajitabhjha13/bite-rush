@@ -144,11 +144,13 @@ async function releaseHold(reservationId) {
   );
 }
 
-async function listMyBookings(userId, now = new Date()) {
+async function listMyBookings(userId, { skip = 0, limit = 10 } = {}, now = new Date()) {
   await expireStaleHolds(now);
-  return Reservation.find({ user: userId })
-    .populate('table', 'number seats')
-    .sort({ date: -1, slot: -1 });
+  const [items, total] = await Promise.all([
+    Reservation.find({ user: userId }).populate('table', 'number seats').sort({ date: -1, slot: -1 }).skip(skip).limit(limit),
+    Reservation.countDocuments({ user: userId })
+  ]);
+  return { items, total };
 }
 
 module.exports = {

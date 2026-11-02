@@ -1,4 +1,6 @@
 const MenuItem = require('../models/MenuItem');
+const { parsePagination, pageResult } = require('../utils/paginate');
+const limits = require('../config/limits');
 
 // @route   GET /api/menu
 // @desc    Get all available menu items (public), with category info populated
@@ -95,8 +97,12 @@ const deleteMenuItem = async (req, res) => {
 // @desc    Get ALL menu items including unavailable ones (admin only)
 const getAllMenuItemsAdmin = async (req, res) => {
   try {
-    const items = await MenuItem.find().populate('category', 'name').sort({ createdAt: -1 });
-    res.status(200).json(items);
+    const pg = parsePagination(req.query, limits.pageSize.adminMenu);
+    const [items, total] = await Promise.all([
+      MenuItem.find().populate('category', 'name').sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit),
+      MenuItem.countDocuments()
+    ]);
+    res.status(200).json(pageResult(items, total, pg));
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

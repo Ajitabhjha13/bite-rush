@@ -43,6 +43,9 @@ function setupTabs() {
 }
 
 // ===== ORDERS TAB =====
+let ordersPage = 1;
+let menuPage = 1;
+
 async function loadOrders(isInitialLoad = false) {
   const tbody = document.getElementById('ordersTableBody');
 
@@ -56,12 +59,19 @@ async function loadOrders(isInitialLoad = false) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/admin/all`, {
+    const res = await fetch(`${API_BASE_URL}/orders/admin/all?page=${ordersPage}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     });
-    const orders = await res.json();
+    const data = await res.json();
 
-    if (!res.ok) throw new Error(orders.message || 'Failed to load orders');
+    if (!res.ok) throw new Error(data.message || 'Failed to load orders');
+
+    const orders = data.items;
+    if (orders.length === 0 && data.page > 1) {
+      ordersPage = data.pages;
+      return loadOrders();
+    }
+    renderPager('ordersPager', tbody.closest('.table-responsive'), data, (p) => { ordersPage = p; loadOrders(true); });
 
     if (orders.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No orders yet.</td></tr>';
@@ -146,12 +156,19 @@ async function loadMenuItemsAdmin() {
   `;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/menu/admin/all`, {
+    const res = await fetch(`${API_BASE_URL}/menu/admin/all?page=${menuPage}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     });
-    const items = await res.json();
+    const data = await res.json();
 
-    if (!res.ok) throw new Error(items.message || 'Failed to load menu');
+    if (!res.ok) throw new Error(data.message || 'Failed to load menu');
+
+    const items = data.items;
+    if (items.length === 0 && data.page > 1) {
+      menuPage = data.pages;
+      return loadMenuItemsAdmin();
+    }
+    renderPager('menuPager', tbody.closest('.table-responsive'), data, (p) => { menuPage = p; loadMenuItemsAdmin(); });
 
     if (items.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No menu items yet.</td></tr>';

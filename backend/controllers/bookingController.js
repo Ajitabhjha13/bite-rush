@@ -2,6 +2,8 @@ const svc = require('../services/bookingService');
 const pay = require('../services/paymentService');
 const booking = require('../config/booking');
 const Reservation = require('../models/Reservation');
+const { parsePagination, pageResult } = require('../utils/paginate');
+const limits = require('../config/limits');
 
 function handle(fn) {
   return async (req, res) => {
@@ -83,7 +85,9 @@ const getPolicy = (req, res) => {
 };
 
 const getMyBookings = handle(async (req, res) => {
-  res.status(200).json(await svc.listMyBookings(req.user._id));
+  const pg = parsePagination(req.query, limits.pageSize.myBookings);
+  const { items, total } = await svc.listMyBookings(req.user._id, pg);
+  res.status(200).json(pageResult(items, total, pg));
 });
 
 const cancelBooking = handle(async (req, res) => {

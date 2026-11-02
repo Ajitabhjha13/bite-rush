@@ -322,7 +322,10 @@ async function loadMyBookings() {
     return;
   }
   try {
-    const list = await api('/bookings/my', { auth: true });
+    const data = await api(`/bookings/my?page=${state.myPage || 1}`, { auth: true });
+    const list = data.items;
+    if (!list.length && data.page > 1) { state.myPage = data.pages; return loadMyBookings(); }
+    renderPager('bookingsPager', box, data, (p) => { state.myPage = p; loadMyBookings(); });
     if (!list.length) {
       box.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-calendar2-x fs-1"></i><p class="mt-2">No bookings yet.</p></div>';
       return;
