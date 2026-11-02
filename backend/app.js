@@ -15,9 +15,9 @@ const app = express();
 
 app.use(cors());
 // Webhook needs the RAW body to verify Razorpay's signature -> mounted BEFORE express.json()
+if (process.env.NODE_ENV !== 'test') app.use(morgan('dev')); // before the webhook route so it is logged too
 app.use('/api/payments', paymentRoutes);
 app.use(express.json());
-if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Bite Rush API is running' });
