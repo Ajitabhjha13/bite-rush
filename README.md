@@ -64,7 +64,7 @@ So Bite Rush became an exercise in building things **the way a production app wo
 ## 🎬 Demo
 
 <p align="center"><img src="docs/demo.gif" alt="Bite Rush demo: booking a table, then the admin reservations grid and orders" width="100%"></p>
-<p align="center"><sub>Recorded against a local test setup with a stubbed payment popup and fictional customers.</sub></p>
+<p align="center"><sub>Recorded on the live site in Razorpay <b>test mode</b> (no real money moves). Account details are masked.</sub></p>
 
 ---
 
