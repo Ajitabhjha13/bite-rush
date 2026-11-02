@@ -10,6 +10,7 @@
 <p align="center">
   <a href="https://bite-rush-frontend.onrender.com"><img src="https://img.shields.io/badge/Live_Demo-Open_App-E8A93B?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Live Demo"></a>
   <a href="https://bite-rush-api.onrender.com/api/health"><img src="https://img.shields.io/website?url=https%3A%2F%2Fbite-rush-api.onrender.com%2Fapi%2Fhealth&style=for-the-badge&label=API&up_message=online&down_message=sleeping&logo=render&logoColor=white" alt="API Status"></a>
+  <a href="https://github.com/Ajitabhjha13/bite-rush/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Ajitabhjha13/bite-rush/ci.yml?branch=main&style=for-the-badge&label=Tests&logo=githubactions&logoColor=white" alt="CI status"></a>
 </p>
 
 <p align="center">
@@ -35,7 +36,7 @@
 
 ## 📑 Contents
 
-[Why I built it](#-why-i-built-it) · [Highlights](#-highlights) · [Screenshots](#-screenshots) · [Architecture](#️-architecture) · [Data Model](#-data-model) · [Security](#️-security) · [Tech Stack](#️-tech-stack) · [Project Structure](#-project-structure) · [Getting Started](#-getting-started-local-development) · [API Reference](#-api-reference) · [Roadmap](#️-roadmap)
+[Why I built it](#-why-i-built-it) · [Highlights](#-highlights) · [Screenshots](#-screenshots) · [Architecture](#️-architecture) · [Engineering decisions](#-engineering-decisions) · [Data Model](#-data-model) · [Security](#️-security) · [Tech Stack](#️-tech-stack) · [Project Structure](#-project-structure) · [Getting Started](#-getting-started-local-development) · [API Reference](#-api-reference) · [Roadmap](#️-roadmap)
 
 ---
 
@@ -57,6 +58,13 @@ So Bite Rush became an exercise in building things **the way a production app wo
 | 🔐 **Server-validated pricing**<br>Every order total is recalculated from the database at checkout — the price a client sends is never trusted, closing the most common e-commerce tampering vector. | 🛡️ **Role-based admin dashboard**<br>A separate, protected dashboard for menu CRUD, live incoming orders (auto-refreshing), and combo management — completely inaccessible to non-admin accounts, enforced on the API itself. |
 | 🪑 **Table booking with deposits**<br>Day-ahead reservations (5 slots, 10 tables, a separate online-only table pool). A seat is **held for 2 minutes** while the customer pays a ₹100 deposit via **Razorpay (test mode)**; double-booking is prevented at the **database level** with partial unique indexes, and a **tiered refund** (100% / 50% / 0%) applies on cancellation. | 🗓️ **Admin reservations grid**<br>Table × time-slot view for any date, with customer details, **Seated / No-show** check-in, restaurant-side **cancel with a full refund**, a retry button for failed refunds, and per-table **online / walk-in** switches. |
 | 🖼️ **Self-hosted images**<br>Dish photos live in the project's own `images/` folder, not hot-linked from a third party — so the menu never breaks if an external image host changes or removes a file. | ✅ **Defensive input validation**<br>Every write endpoint runs through `express-validator` server-side — registration, login, menu changes, and order placement all reject malformed input before it ever reaches the database. |
+
+---
+
+## 🎬 Demo
+
+<p align="center"><img src="docs/demo.gif" alt="Bite Rush demo: booking a table, then the admin reservations grid and orders" width="100%"></p>
+<p align="center"><sub>Recorded on the live site in Razorpay <b>test mode</b> (no real money moves). Account details are masked.</sub></p>
 
 ---
 
@@ -117,6 +125,36 @@ backend/
 
 ---
 
+## 🧠 Engineering decisions
+
+The choices below are the ones that were not obvious, and why I made them.
+
+**Double-booking is prevented by the database, not by application code.**
+A check-then-insert in Node has a race: two customers can both see a free table. Instead, reservations carry *partial unique indexes* (one active booking per table, date and slot), so the second concurrent insert fails at the database. Dates and slots are evaluated in IST, so "today" means the same thing for the customer and the server.
+
+**A held seat expires on its own.**
+A seat is held for 2 minutes while the customer pays. An expired hold stops counting as taken immediately, so abandoned checkouts never block a table, and if a payment still arrives after the hold expired, the server tries to re-take that seat in one atomic update; if someone else has it by then, the payment is refunded in full instead of double-booking.
+
+**The server decides the money; the client only displays it.**
+Order totals are recalculated from the database. The booking deposit comes from server configuration. The refund preview in the browser is only a preview; the server computes the real refund from the current time (100% at 6h or more, 50% at 2h or more, otherwise 0, and always 100% when the restaurant cancels).
+
+**One code path confirms a payment, whoever tells us first.**
+Razorpay can reach us twice: the browser callback and a signed webhook. Both call the same `applyCapturedPayment` function, so they cannot disagree. The webhook signature is checked against the *raw* request body (the webhook route is mounted before `express.json()`), and each event id is stored so a retry is a no-op.
+
+**A refund can only be issued once.**
+A refund is *claimed* with one atomic update (`refund_status` from `none` or `failed` to `processing`) before the Razorpay call. If two admins click at the same time, or a retry races the first attempt, only one wins. A failed refund is kept as `failed`, shown in the admin grid and can be retried.
+
+**Rate limits key on the real client, not on a shared proxy address.**
+Behind Render and Cloudflare, `req.ip` can be a proxy. The limiter prefers the edge's client-IP header and falls back to `req.ip`; IPv6 addresses are grouped by /56 so one user cannot dodge a limit by rotating addresses. Booking limits are per user, so people on the same Wi-Fi do not share a bucket. Webhooks are exempt, because blocking Razorpay would lose payments.
+
+**Lists are paginated on the server, and without N+1 queries.**
+Order lists fetch their line items with one `$in` query for the whole page instead of one query per order, and page sizes are capped server-side no matter what the client asks for.
+
+**Tests never touch real services.**
+The suite runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
+
+---
+
 ## 🛡️ Security
 
 | Layer | What it does |
@@ -128,6 +166,9 @@ backend/
 | **Server-side price validation** | Checkout recalculates every line item's price from the current database record; a tampered client-side price is simply ignored. |
 | **Input validation** | `express-validator` rule sets on every write endpoint (auth, menu, orders, combos) reject malformed or out-of-range input before it reaches a controller. |
 | **Payment integrity** | The deposit amount is decided server-side; checkout signatures (HMAC) and Razorpay webhooks (raw-body signature, event-id de-duplication) are verified with constant-time comparison, and one code path confirms every payment so the two can never disagree. A refund is claimed atomically, so it can never be issued twice. |
+| **Security headers** | `helmet` on the API (HSTS, `nosniff`, frame and referrer policies); the static frontend sends `X-Frame-Options`, `X-Content-Type-Options` and `Referrer-Policy` through Render's header rules. |
+| **CORS allowlist** | Only the deployed frontend and `localhost` / `127.0.0.1` may call the API from a browser. |
+| **Rate limiting** | `express-rate-limit`: 10 login/register attempts per 15 min per IP, 20 booking actions per 10 min per user, 600 requests per 15 min per IP overall. The signed Razorpay webhook is exempt. |
 | **Secrets management** | `JWT_SECRET` and `MONGO_URI` live only in environment variables (`.env`, Render env vars) — never committed; `.env` is git-ignored from day one. |
 
 ---
@@ -235,24 +276,25 @@ Open `frontend/index.html` directly in your browser, or serve the `frontend/` fo
 | GET | `/api/menu/category/:id` | Public | Filter menu items by category |
 | GET | `/api/combos` | Public | List all available combo meals (with live savings) |
 | POST | `/api/orders` | Customer | Place a new order (items and/or combos) |
-| GET | `/api/orders/my` | Customer | Get logged-in user's order history |
+| GET | `/api/orders/my?page=` | Customer | Get logged-in user's order history (paginated) |
 | PUT | `/api/orders/:id/cancel` | Customer | Cancel your own order (only while status = Received) |
-| GET | `/api/menu/admin/all` | Admin | List all menu items (incl. unavailable) |
+| GET | `/api/menu/admin/all?page=` | Admin | List all menu items (incl. unavailable), paginated |
 | POST / PUT / DELETE | `/api/menu/admin/...` | Admin | Menu item CRUD |
 | POST / PUT / DELETE | `/api/combos/admin/...` | Admin | Combo CRUD |
 | GET | `/api/bookings/policy` · `/api/bookings/availability?date=` | Public | Booking rules; free tables per slot |
 | POST | `/api/bookings/hold` | Customer | Hold a table for 2 minutes and create a Razorpay order |
 | POST | `/api/bookings/:id/confirm` | Customer | Confirm after payment (signature verified) |
-| GET | `/api/bookings/my` | Customer | My bookings |
+| GET | `/api/bookings/my?page=` | Customer | My bookings (paginated) |
 | PUT | `/api/bookings/:id/cancel` | Customer | Cancel; refund by how close the slot is |
 | POST | `/api/payments/webhook` | Razorpay | Signed webhook (payment captured) |
 | GET | `/api/bookings/admin/grid?date=` | Admin | Table × slot grid with summary |
 | PUT | `/api/bookings/admin/:id/attendance` · `/cancel` · `/retry-refund` | Admin | Seated / no-show; cancel with full refund; retry a failed refund |
 | PUT | `/api/tables/:id` | Admin | Switch a table online / walk-in or in / out of service |
-| GET | `/api/orders/admin/all` | Admin | View all orders |
+| GET | `/api/orders/admin/all?page=` | Admin | View all orders (paginated) |
 | PUT | `/api/orders/admin/:id/status` | Admin | Update an order's status |
 
 All protected routes require an `Authorization: Bearer <token>` header.
+Paginated list endpoints return `{ items, total, page, limit, pages }`. Over-limit requests get a `429` with a plain-language message.
 
 ---
 
@@ -265,9 +307,10 @@ All protected routes require an `Authorization: Bearer <token>` header.
 - [x] Combo meals with auto-computed savings
 - [x] Order cancellation
 - [x] Self-hosted dish images
-- [ ] Pagination on admin orders/menu tables
-- [x] Automated tests (Jest + Supertest + in-memory MongoDB, 92 tests)
+- [x] Pagination on admin orders/menu, My Orders and My bookings
+- [x] Automated tests (Jest + Supertest + in-memory MongoDB, 103 tests) run on every push by GitHub Actions
 - [x] Table booking with Razorpay deposit (test mode), tiered refunds and an admin reservations grid
+- [x] Rate limiting, security headers and a CORS allowlist
 - [ ] Real-time order notifications via WebSockets
 - [ ] React Native mobile app using the existing REST API
 
