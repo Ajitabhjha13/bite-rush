@@ -605,3 +605,8 @@ h1, h2, h3, .navbar-brand, .brand-font {
 .res-off { --bs-table-bg: #f3f3f3; background: repeating-linear-gradient(45deg, #f3f3f3, #f3f3f3 6px, #eaeaea 6px, #eaeaea 12px); }
 .res-dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid #ccc; vertical-align: -1px; margin-right: 4px; }
 .res-table-card { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 10px 12px; }
+
+/* ===== Legal pages ===== */
+.legal-page { max-width: 780px; }
+.legal-page h2 { color: var(--color-ink); }
+.legal-page li { margin-bottom: 0.4rem; }
