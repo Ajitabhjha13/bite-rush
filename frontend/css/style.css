@@ -610,3 +610,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
 .legal-page { max-width: 780px; }
 .legal-page h2 { color: var(--color-ink); }
 .legal-page li { margin-bottom: 0.4rem; }
+
+/* Keep the footer at the bottom of the window on short pages */
+body.flex-page { min-height: 100vh; display: flex; flex-direction: column; }
+body.flex-page > footer { margin-top: auto; }
