@@ -38,6 +38,7 @@ function userOrIp(req) {
 
 const authLimiter = make(limits.auth, 'Too many attempts. Please wait a few minutes and try again.');
 const bookingLimiter = make(limits.booking, 'You are doing that too quickly. Please wait a few minutes and try again.', userOrIp);
+const orderLimiter = make(limits.booking, 'You are doing that too quickly. Please wait a few minutes and try again.', userOrIp);
 const globalLimiter = make(limits.global, 'Too many requests. Please slow down and try again shortly.');
 
-module.exports = { authLimiter, bookingLimiter, globalLimiter, make, userOrIp, clientIp };
+module.exports = { authLimiter, bookingLimiter, orderLimiter, globalLimiter, make, userOrIp, clientIp };

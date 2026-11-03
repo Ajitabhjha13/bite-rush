@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const pay = require('../services/paymentService');
+const orderPay = require('../services/orderPaymentService');
 const WebhookEvent = require('../models/WebhookEvent');
 
 // One line per webhook so Render's logs show what Razorpay sent and what we did (no secrets, no payloads).
@@ -30,7 +31,9 @@ const webhook = async (req, res) => {
   }
 
   try {
-    const result = await pay.handleWebhookEvent(event);
+    // One webhook serves both table deposits and food orders: try the booking first, then the food order.
+    let result = await pay.handleWebhookEvent(event);
+    if (result && result.outcome === 'unknown_order') result = await orderPay.handleWebhookEvent(event);
     log(event.event, eventId, '->', (result && (result.outcome || (result.ignored && 'ignored'))) || 'done');
     await WebhookEvent.updateOne({ event_id: eventId }, { $set: { processed: true } });
     res.status(200).json({ status: 'ok' });
