@@ -8,7 +8,7 @@ const OUTLET_INFO = {
     outletName: 'Bite Rush Bites',
     tagline: 'Quick starters & snacks to kick things off.',
     icon: 'bi-egg-fried',
-    image: 'https://images.unsplash.com/photo-1600688640154-9619e002df30?auto=format&fit=crop&w=800&q=80'
+    image: 'images/outlets/bites.jpg'
   },
   mains: {
     outletName: 'Bite Rush Kitchen',
@@ -20,13 +20,13 @@ const OUTLET_INFO = {
     outletName: 'Bite Rush Sips',
     tagline: 'Refreshing drinks to go with your meal.',
     icon: 'bi-cup-straw',
-    image: 'https://images.unsplash.com/photo-1743342693571-e91a796317f8?auto=format&fit=crop&w=800&q=80'
+    image: 'images/outlets/sips.jpg'
   },
   desserts: {
     outletName: 'Bite Rush Sweets',
     tagline: 'Sweet treats to end on a high note.',
     icon: 'bi-cake2',
-    image: 'https://images.unsplash.com/photo-1712725213053-dad649077a02?auto=format&fit=crop&w=800&q=80'
+    image: 'images/outlets/sweets.jpg'
   }
 };
 
