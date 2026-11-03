@@ -80,7 +80,7 @@ I kept iterating long after the minimum feature set was done: item customization
 |---|---|
 | ![Cart with combo](docs/screenshots/cart.png) | ![Order tracking](docs/screenshots/order-tracking.png) |
 
-| Admin: incoming orders (auto-refresh every 30s) | Admin: menu management |
+| Admin: incoming orders (live) | Admin: menu management |
 |---|---|
 | ![Admin orders](docs/screenshots/admin-orders.png) | ![Admin menu management](docs/screenshots/admin-menu.png) |
 
