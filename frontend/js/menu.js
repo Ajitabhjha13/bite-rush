@@ -1,6 +1,6 @@
 // ===== MENU PAGE LOGIC =====
 
-// Matches if ANY word in the dish name starts with the query — so "Biryani"
+// Matches if ANY word in the dish name starts with the query - so "Biryani"
 // correctly finds "Veg Biryani" (not just names that literally begin with it).
 function matchesSearchQuery(name, query) {
   const words = name.toLowerCase().split(/\s+/);
@@ -68,7 +68,7 @@ function renderMenuItems(items, emptyMessage) {
     <div class="col-sm-6 col-lg-4 col-xl-3">
       <div class="card menu-card">
         <img src="${item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image'}" alt="${item.name}" data-item-id="${item._id}" class="menu-card-img-clickable" style="cursor:pointer;" onerror="this.onerror=null; this.src='https://placehold.co/300x180/f1f1f1/999999?text=No+Image';">
-        <span class="delivery-time-badge"><i class="bi bi-clock"></i> ${item.prep_time || '15-20 min'}</span>
+        ${item.prep_time ? `<span class="delivery-time-badge"><i class="bi bi-clock"></i> ${item.prep_time}</span>` : ''}
         ${item.is_bestseller ? '<span class="bestseller-badge"><i class="bi bi-star-fill"></i> Bestseller</span>' : ''}
         <div class="card-body d-flex flex-column">
           <h5 class="card-title fw-semibold menu-card-img-clickable" data-item-id="${item._id}" style="cursor:pointer;">
@@ -174,11 +174,11 @@ function getQtyControlHtml(item) {
 }
 
 function attachMenuCardHandlers() {
-  // No-op now — click handling is done once via event delegation (see DOMContentLoaded below).
+  // No-op now - click handling is done once via event delegation (see DOMContentLoaded below).
   // Kept as a function so existing calls elsewhere don't need to change.
 }
 
-// Re-renders just the quantity controls on every visible card — called whenever the cart changes.
+// Re-renders just the quantity controls on every visible card - called whenever the cart changes.
 function syncMenuCardQuantities() {
   document.querySelectorAll('.qty-control-wrapper').forEach((wrapper) => {
     const itemId = wrapper.dataset.itemId;
@@ -290,7 +290,7 @@ function applySearchFromURL() {
 document.addEventListener('DOMContentLoaded', async () => {
   // Event delegation: one listener handles Add/+/- clicks anywhere on the
   // page (menu grid cards AND the item detail modal), including elements
-  // that get added/replaced later — no need to re-attach listeners each time.
+  // that get added/replaced later - no need to re-attach listeners each time.
   document.addEventListener('click', (e) => {
     const addBtn = e.target.closest('.add-to-cart-btn, .qty-increase-btn');
     if (addBtn) {
@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const checked = document.querySelector('input[name="spiceLevel"]:checked');
           spiceLevel = checked ? checked.value : 'Medium';
         } else {
-          spiceLevel = 'Medium'; // quick-add from the card skips the picker — defaults to Medium
+          spiceLevel = 'Medium'; // quick-add from the card skips the picker - defaults to Medium
         }
       }
 

@@ -9,7 +9,7 @@ const orderItemSchema = new mongoose.Schema({
   item: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'MenuItem'
-    // Not required at schema level — an OrderItem is EITHER a regular
+    // Not required at schema level - an OrderItem is EITHER a regular
     // menu item OR a combo (see `combo` below). The controller enforces
     // that exactly one of the two is set.
   },

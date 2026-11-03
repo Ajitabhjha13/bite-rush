@@ -54,7 +54,7 @@ const placeOrder = async (req, res) => {
 
         total += menuItem.price * quantity;
 
-        // Only store a spice level if the dish actually supports it — ignore
+        // Only store a spice level if the dish actually supports it - ignore
         // anything sent for items that don't (defensive, matches server-side
         // validation philosophy used elsewhere in this project).
         const spiceLevel = menuItem.has_spice_level && cartItem.spice_level
@@ -181,7 +181,7 @@ const updateOrderStatus = async (req, res) => {
 };
 
 // @route   PUT /api/orders/:id/cancel
-// @desc    Cancel your own order (customer) — only allowed while the
+// @desc    Cancel your own order (customer) - only allowed while the
 //          kitchen hasn't started preparing it yet (status = 'Received').
 const cancelOrder = async (req, res) => {
   try {
@@ -191,7 +191,7 @@ const cancelOrder = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // A customer may only cancel their OWN order — never anyone else's,
+    // A customer may only cancel their OWN order - never anyone else's,
     // even if they know the order id (same defensive pattern used
     // throughout this project for every user-owned resource).
     if (order.user.toString() !== req.user._id.toString()) {

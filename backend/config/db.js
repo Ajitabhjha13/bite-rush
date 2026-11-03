@@ -8,7 +8,7 @@ const connectDB = async () => {
     console.log('✅ MongoDB Connected');
   } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);
-    // Don't exit — keep server alive so we can debug via /api/health
+    // Don't exit - keep server alive so we can debug via /api/health
   }
 };
 

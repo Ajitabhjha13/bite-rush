@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 
-// Runs after any validation chain — if any rule failed, respond with 400
+// Runs after any validation chain - if any rule failed, respond with 400
 // and a clean list of field-level messages. Otherwise, pass through.
 function handleValidationErrors(req, res, next) {
   const errors = validationResult(req);

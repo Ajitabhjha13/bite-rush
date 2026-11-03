@@ -3,8 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bite Rush | Online Food Ordering</title>
-  <link rel="icon" type="image/png" href="images/logo.png">
+  <title>Bite Rush | Food delivery and table booking in Vadodara</title>
+  <link rel="icon" href="images/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <meta name="theme-color" content="#14110F">
+  <meta name="description" content="Order food for home delivery in Vadodara or book a table at Bite Rush. A full-stack portfolio project by Ajitabh Kumar Jha.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bite Rush">
+  <meta property="og:title" content="Bite Rush | Food delivery and table booking in Vadodara">
+  <meta property="og:description" content="Order food for home delivery in Vadodara or book a table at Bite Rush. A full-stack portfolio project by Ajitabh Kumar Jha.">
+  <meta property="og:image" content="https://bite-rush-frontend.onrender.com/images/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
 
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -55,14 +66,14 @@
     <div class="hero-overlay"></div>
 
     <div class="container text-center text-white py-5">
-      <span class="hero-eyebrow hero-animate">Order in minutes, not hours</span>
+      <span class="hero-eyebrow hero-animate">Home delivery and table booking in Vadodara</span>
       <h1 class="mb-3 mt-3 hero-animate delay-1">Craving fresh <span class="rotate-word" id="rotateWord">Biryani</span>?</h1>
-      <p class="lead mx-auto mb-4 hero-animate delay-1">Fresh food, fast delivery — order from Bite Rush in just a few clicks.</p>
+      <p class="lead mx-auto mb-4 hero-animate delay-1">Order for home delivery in Vadodara, or book a table in advance.</p>
 
       <div class="hero-search-wrapper mx-auto mb-5 hero-animate delay-1">
         <form id="heroSearchForm" class="hero-search-form">
           <i class="bi bi-search"></i>
-          <input type="text" id="heroSearchInput" autocomplete="off" placeholder="Search for dishes — biryani, pizza, momos...">
+          <input type="text" id="heroSearchInput" autocomplete="off" placeholder="Search dishes, e.g. biryani">
           <button type="submit" class="btn btn-warning fw-semibold">Search</button>
         </form>
         <div id="heroSearchSuggestions" class="hero-search-suggestions d-none"></div>
@@ -134,7 +145,7 @@
             <div class="step-number">1</div>
             <i class="bi bi-book fs-1 text-warning mb-3"></i>
             <h5 class="fw-semibold">Browse the Menu</h5>
-            <p class="text-muted small">Explore dishes by category — Starters, Mains, Beverages & Desserts.</p>
+            <p class="text-muted small">Explore dishes by category: Starters, Mains, Beverages and Desserts.</p>
           </div>
         </div>
         <div class="col-md-4">
@@ -142,15 +153,15 @@
             <div class="step-number">2</div>
             <i class="bi bi-cart-check fs-1 text-warning mb-3"></i>
             <h5 class="fw-semibold">Place Your Order</h5>
-            <p class="text-muted small">Add items to your cart and check out securely in a few clicks.</p>
+            <p class="text-muted small">Add items to your cart and enter your Vadodara delivery address.</p>
           </div>
         </div>
         <div class="col-md-4">
           <div class="how-it-works-step">
             <div class="step-number">3</div>
             <i class="bi bi-truck fs-1 text-warning mb-3"></i>
-            <h5 class="fw-semibold">Track & Enjoy</h5>
-            <p class="text-muted small">Follow your order live — Received → Preparing → Ready → Delivered.</p>
+            <h5 class="fw-semibold">Check Your Order</h5>
+            <p class="text-muted small">See your order move from Received to Preparing, Ready and Delivered on the My Orders page.</p>
           </div>
         </div>
       </div>
@@ -164,15 +175,15 @@
         <div class="col-md-4">
           <div class="feature-card p-4 h-100">
             <i class="bi bi-lightning-charge-fill fs-1 text-warning mb-3"></i>
-            <h4>Fast Ordering</h4>
-            <p class="text-muted">Place your order in under 2 minutes with our streamlined menu and cart system.</p>
+            <h4>Simple Ordering</h4>
+            <p class="text-muted">Pick dishes, add them to your cart and check out with your delivery address.</p>
           </div>
         </div>
         <div class="col-md-4">
           <div class="feature-card p-4 h-100">
             <i class="bi bi-truck fs-1 text-warning mb-3"></i>
-            <h4>Real-Time Tracking</h4>
-            <p class="text-muted">Track your order status from Received to Delivered, live.</p>
+            <h4>Order Status</h4>
+            <p class="text-muted">Check where your order stands, from Received to Delivered, on the My Orders page.</p>
           </div>
         </div>
         <div class="col-md-4">
@@ -189,10 +200,10 @@
   <!-- Visit Us -->
   <section class="py-5 bg-light">
     <div class="container">
-      <div class="row g-5 align-items-center">
+      <div class="row g-4 g-lg-5 align-items-center">
         <div class="col-lg-6">
           <h2 class="fw-bold mb-3">Visit Us</h2>
-          <p class="text-muted mb-4">Proudly serving Vadodara — fresh food, delivered fast, right across the city.</p>
+          <p class="text-muted mb-4">We deliver within Vadodara and take table bookings in advance.</p>
           <ul class="list-unstyled">
             <li class="d-flex gap-3 mb-3">
               <i class="bi bi-geo-alt-fill text-warning fs-5"></i>
@@ -200,7 +211,7 @@
             </li>
             <li class="d-flex gap-3 mb-3">
               <i class="bi bi-clock-fill text-warning fs-5"></i>
-              <span>Open Daily: 11:00 AM – 11:00 PM</span>
+              <span>Open Daily: 11:00 AM to 11:00 PM</span>
             </li>
             <li class="d-flex gap-3">
               <i class="bi bi-truck text-warning fs-5"></i>
@@ -236,7 +247,7 @@
       <div class="row g-4">
         <div class="col-md-3">
           <p class="mb-2 fw-bold fs-5 d-flex align-items-center gap-2"><img src="images/logo.png" alt="Bite Rush" class="footer-logo"> Bite Rush</p>
-          <p class="text-muted small mb-0">Fresh food, ordered fast. A full-stack food ordering platform built with Node.js, Express, MongoDB & Bootstrap.</p>
+          <p class="text-muted small mb-0">Food ordering and table booking in Vadodara. Built with Node.js, Express, MongoDB and Bootstrap.</p>
         </div>
         <div class="col-md-3">
           <p class="fw-semibold mb-2">Quick Links</p>
@@ -271,7 +282,7 @@
       <hr class="border-secondary my-4">
       <p class="mb-2 small text-center"><a href="privacy.html" class="footer-link">Privacy Policy</a> <span class="text-muted mx-2">|</span> <a href="terms.html" class="footer-link">Terms and Conditions</a></p>
       <p class="mb-1 text-muted small text-center">&copy; 2026 Bite Rush. Built with Node.js, Express, MongoDB & Bootstrap.</p>
-      <p class="mb-0 text-muted small text-center">Designed & developed by <span class="text-white fw-semibold">Ajitabh Kumar Jha</span> as a full-stack learning project.</p>
+      <p class="mb-0 text-muted small text-center">Designed & developed by <span class="text-white fw-semibold">Ajitabh Kumar Jha</span> as a portfolio project.</p>
     </div>
   </footer>
 

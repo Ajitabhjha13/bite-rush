@@ -150,7 +150,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
   gap: 10px;
   max-width: 560px;
   background: rgba(255,255,255,0.95);
-  border-radius: 50px;
+  border-radius: 10px;
   padding: 6px 6px 6px 20px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
 }
@@ -168,7 +168,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
 
 .hero-search-form input::placeholder { color: #aaa; }
 
-.hero-search-form button { border-radius: 40px; }
+.hero-search-form button { border-radius: 8px; }
 
 .hero-search-wrapper {
   position: relative;
@@ -206,7 +206,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
 .hero-search-suggestion-item .suggestion-price { margin-left: auto; color: var(--color-gold-dark); font-weight: 600; }
 
 @media (max-width: 767px) {
-  .hero-search-form { flex-wrap: wrap; border-radius: 24px; padding: 12px; }
+  .hero-search-form { flex-wrap: wrap; border-radius: 10px; padding: 12px; }
   .hero-search-form input { width: 100%; order: 1; }
   .hero-search-form button { order: 2; width: 100%; margin-top: 8px; }
 }
@@ -242,7 +242,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
 
 .category-btn {
   cursor: pointer;
-  border-radius: 30px !important;
+  border-radius: 8px !important;
   padding: 8px 20px;
   font-weight: 500;
   font-size: 0.92rem;
@@ -323,7 +323,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
 
 .order-history-card { border: none; border-radius: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.06); }
 
-.status-badge { font-size: 0.75rem; padding: 5px 12px; border-radius: 20px; font-weight: 600; }
+.status-badge { font-size: 0.75rem; padding: 5px 12px; border-radius: 6px; font-weight: 600; }
 
 .status-Received { background: #e3f2fd; color: #1565c0; }
 .status-Preparing { background: #fff3e0; color: #e65100; }
@@ -458,7 +458,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
   background: rgba(20,17,15,0.82);
   color: #fff;
   padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 500;
   backdrop-filter: blur(3px);
@@ -498,7 +498,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
   background: var(--color-gold);
   color: var(--color-ink);
   padding: 4px 10px;
-  border-radius: 20px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -516,7 +516,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
   background: #1F7A3D;
   color: #fff;
   padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -581,7 +581,7 @@ h1, h2, h3, .navbar-brand, .brand-font {
 .bk-expired { background: #eceff1; color: #546e7a; }
 .policy-list li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 0.9rem; }
 
-#reserveTabs .nav-link { color: var(--color-ink); background: #f3f0ea; font-weight: 600; border-radius: 30px; padding: 8px 20px; }
+#reserveTabs .nav-link { color: var(--color-ink); background: #f3f0ea; font-weight: 600; border-radius: 8px; padding: 8px 20px; }
 #reserveTabs .nav-link.active { background: var(--color-ink); color: #fff; }
 
 /* ===== Admin: reservations grid ===== */

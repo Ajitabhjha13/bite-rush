@@ -1,8 +1,8 @@
 // One-off script to create 2 starter combo meals using your existing menu items.
-// Safe to run multiple times — skips a combo if one with the same name already exists.
+// Safe to run multiple times - skips a combo if one with the same name already exists.
 //
 // Usage: node seedCombos.js
-// Delete this file once you're done — don't commit it to git.
+// Delete this file once you're done - don't commit it to git.
 
 require('dotenv').config();
 const mongoose = require('mongoose');
@@ -12,7 +12,7 @@ const Combo = require('./models/Combo');
 const COMBOS = [
   {
     name: 'Veg Feast Combo',
-    description: 'A starter, a main course, and a sweet ending — all in one.',
+    description: 'A starter, a main course, and a sweet ending, all in one.',
     itemNames: ['Paneer Tikka', 'Paneer Butter Masala', 'Gulab Jamun'],
     combo_price: 499,
     imageFrom: 'Paneer Butter Masala' // reuse this item's photo for the combo card
@@ -43,7 +43,7 @@ async function seedCombos() {
       if (menuItems.length !== combo.itemNames.length) {
         const found = menuItems.map((i) => i.name);
         const missing = combo.itemNames.filter((n) => !found.includes(n));
-        console.log(`⚠  Skipped "${combo.name}" — couldn't find: ${missing.join(', ')}`);
+        console.log(`⚠  Skipped "${combo.name}" - couldn't find: ${missing.join(', ')}`);
         continue;
       }
 
