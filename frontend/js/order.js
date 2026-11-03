@@ -128,6 +128,51 @@ function renderCheckoutPanel() {
   if (nameInput && !nameInput.value && user && user.name) nameInput.value = user.name;
 }
 
+// ===== PAYMENT CHOICE =====
+function selectedMethod() {
+  const el = document.querySelector('input[name="payMethod"]:checked');
+  return el ? el.value : 'cod';
+}
+
+function updatePayUi() {
+  const online = selectedMethod() === 'online';
+  const label = document.getElementById('placeOrderLabel');
+  const hint = document.getElementById('payHint');
+  if (label) label.textContent = online ? `Pay ₹${getCartTotal()}` : 'Confirm & Place Order';
+  if (hint) hint.classList.toggle('d-none', !online);
+}
+
+// An online order that is waiting for payment. Kept while the page is open so a closed popup can be reopened
+// for the SAME order (no second order, no second charge), but only while the cart and address are unchanged.
+let pendingOnline = null;
+
+function resetPlaceButton() {
+  const btn = document.getElementById('placeOrderBtn');
+  btn.disabled = false;
+  btn.classList.remove('disabled');
+  updatePayUi();
+}
+
+function showError(message) {
+  const errorBox = document.getElementById('checkoutError');
+  errorBox.textContent = message;
+  errorBox.classList.remove('d-none');
+}
+
+// Shows the "order placed" screen. `paidOnline` also starts the 30-second full-refund countdown.
+function showConfirmation({ orderId, total, delivery, paidOnline, secondsLeft }) {
+  document.getElementById('confirmAddress').textContent = formatAddress({ ...delivery, city: 'Vadodara' });
+  document.getElementById('checkoutPanel').classList.add('d-none');
+  document.getElementById('confirmationPanel').classList.remove('d-none');
+  document.getElementById('confirmOrderId').textContent = orderId;
+  document.getElementById('confirmTotal').textContent = `₹${total}`;
+  document.getElementById('confirmPaymentText').textContent = paidOnline ? 'Paid online (test mode)' : 'Cash on delivery';
+  document.getElementById('confirmStatusTracker').innerHTML = renderStatusTracker('Received');
+  if (paidOnline) startUndoCountdown(orderId, secondsLeft);
+  clearCart();
+  loadOrderHistory();
+}
+
 // Place the order via API
 async function placeOrder() {
   const btn = document.getElementById('placeOrderBtn');
@@ -155,8 +200,14 @@ async function placeOrder() {
     return;
   }
 
+  const method = selectedMethod();
+  if (method === 'online' && typeof Razorpay === 'undefined') {
+    showError('The payment popup could not load. Check your internet connection, or choose cash on delivery.');
+    return;
+  }
+
   btn.disabled = true;
-  btn.textContent = 'Placing order...';
+  document.getElementById('placeOrderLabel').textContent = method === 'online' ? 'Starting payment...' : 'Placing order...';
 
   try {
     const cart_items = cart.map((item) => ({
@@ -167,13 +218,21 @@ async function placeOrder() {
       spice_level: item.spice_level || undefined
     }));
 
+    // Same cart and same address as the unfinished payment: reopen that payment instead of creating another order.
+    const signature = JSON.stringify({ cart_items, delivery, method });
+    if (method === 'online' && pendingOnline && pendingOnline.signature === signature) {
+      openRazorpay(pendingOnline, delivery);
+      return;
+    }
+    pendingOnline = null;
+
     const res = await fetch(`${API_BASE_URL}/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${getToken()}`
       },
-      body: JSON.stringify({ cart_items, delivery })
+      body: JSON.stringify({ cart_items, delivery, payment_method: method })
     });
 
     const data = await res.json();
@@ -192,22 +251,128 @@ async function placeOrder() {
       throw new Error(data.message || 'Failed to place order');
     }
 
-    document.getElementById('confirmAddress').textContent = formatAddress({ ...delivery, city: 'Vadodara' });
-    document.getElementById('checkoutPanel').classList.add('d-none');
-    document.getElementById('confirmationPanel').classList.remove('d-none');
-    document.getElementById('confirmOrderId').textContent = data.order_id;
-    document.getElementById('confirmTotal').textContent = `₹${data.total_amount}`;
-    document.getElementById('confirmStatusTracker').innerHTML = renderStatusTracker('Received');
+    if (method === 'online') {
+      pendingOnline = { signature, orderId: data.order_id, total: data.total_amount, payment: data.payment };
+      openRazorpay(pendingOnline, delivery);
+      return;
+    }
 
-    clearCart();
-    loadOrderHistory();
+    showConfirmation({ orderId: data.order_id, total: data.total_amount, delivery, paidOnline: false });
 
   } catch (error) {
-    errorBox.textContent = error.message;
-    errorBox.classList.remove('d-none');
-    btn.disabled = false;
-    btn.textContent = 'Confirm & Place Order';
+    showError(error.message);
+    resetPlaceButton();
   }
+}
+
+function openRazorpay(pending, delivery) {
+  const user = getCurrentUser() || {};
+  const rzp = new Razorpay({
+    key: pending.payment.key_id,
+    amount: pending.payment.amount,
+    currency: pending.payment.currency,
+    order_id: pending.payment.order_id,
+    name: 'Bite Rush',
+    description: 'Food order',
+    image: 'images/logo.png',
+    prefill: { name: delivery.name || user.name || '', email: user.email || '', contact: delivery.phone || '' },
+    theme: { color: '#E8A93B' },
+    timeout: pending.payment.timeout_seconds,
+    handler: (resp) => confirmOnlinePayment(pending, delivery, resp),
+    modal: {
+      ondismiss: () => {
+        showError('Payment was not completed. Your cart is saved. Press the pay button to try again.');
+        resetPlaceButton();
+      }
+    }
+  });
+  rzp.on('payment.failed', (r) => {
+    const why = r && r.error && r.error.description ? r.error.description : 'Payment failed.';
+    showError(`${why} You can try again.`);
+  });
+  document.getElementById('checkoutError').classList.add('d-none');
+  rzp.open();
+}
+
+async function confirmOnlinePayment(pending, delivery, resp) {
+  const btn = document.getElementById('placeOrderBtn');
+  btn.disabled = true;
+  document.getElementById('placeOrderLabel').textContent = 'Confirming your payment...';
+  try {
+    const res = await fetch(`${API_BASE_URL}/orders/${pending.orderId}/confirm-payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+      body: JSON.stringify({
+        razorpay_payment_id: resp.razorpay_payment_id,
+        razorpay_signature: resp.razorpay_signature
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Could not confirm the payment');
+    pendingOnline = null;
+    showConfirmation({
+      orderId: data.order._id, total: data.order.total_amount, delivery,
+      paidOnline: true, secondsLeft: data.full_refund_seconds_left
+    });
+  } catch (error) {
+    // The payment may have gone through even though this call failed (the server also hears from Razorpay directly).
+    showError(`${error.message}. If money was deducted, your order will appear in the list below within a minute, or the amount will be refunded.`);
+    resetPlaceButton();
+    loadOrderHistory();
+  }
+}
+
+// ===== 30-SECOND FULL-REFUND WINDOW =====
+let undoTimer = null;
+
+function startUndoCountdown(orderId, secondsLeft) {
+  const box = document.getElementById('undoBox');
+  const active = document.getElementById('undoActive');
+  const late = document.getElementById('undoLate');
+  const secs = document.getElementById('undoSeconds');
+  const bar = document.getElementById('undoBar');
+  const btn = document.getElementById('undoCancelBtn');
+  const total = Math.max(1, secondsLeft || 0);
+  const endAt = Date.now() + (secondsLeft || 0) * 1000;
+
+  clearInterval(undoTimer);
+  document.getElementById('undoResult').classList.add('d-none');
+  box.classList.remove('d-none');
+  active.classList.remove('d-none');
+  late.classList.add('d-none');
+  btn.disabled = false;
+
+  const tick = () => {
+    const left = Math.max(0, (endAt - Date.now()) / 1000);
+    secs.textContent = Math.ceil(left);
+    bar.style.width = `${(left / total) * 100}%`;
+    if (left <= 0) {
+      clearInterval(undoTimer);
+      active.classList.add('d-none');
+      late.classList.remove('d-none');
+    }
+  };
+  tick();
+  undoTimer = setInterval(tick, 250);
+
+  btn.onclick = async () => {
+    btn.disabled = true;
+    try {
+      const out = await cancelOrderRequest(orderId);
+      clearInterval(undoTimer);
+      box.classList.add('d-none');
+      const result = document.getElementById('undoResult');
+      result.textContent = out.refund && out.refund.status === 'processed'
+        ? `Order cancelled. ₹${out.refund.amount_rupees} (${out.refund.percent}%) is being refunded to your payment method.`
+        : 'Order cancelled. Your refund is being processed.';
+      result.classList.remove('d-none');
+      document.getElementById('confirmStatusTracker').innerHTML = '<p class="text-danger small mb-0"><i class="bi bi-x-circle"></i> This order was cancelled.</p>';
+      loadOrderHistory();
+    } catch (error) {
+      btn.disabled = false;
+      showToast(error.message, 'error');
+    }
+  };
 }
 
 // Re-adds every item from a past order back into the current cart
@@ -243,27 +408,48 @@ function reorderPastOrder(orderId, orders) {
   window.location.href = 'menu.html';
 }
 
+// Asks the server to cancel an order. The server decides the refund.
+async function cancelOrderRequest(orderId) {
+  const res = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to cancel order');
+  return data;
+}
+
 // Cancels a past order (only allowed while status is still "Received")
-async function cancelOrder(orderId) {
-  if (!confirm('Are you sure you want to cancel this order?')) return;
+async function cancelOrder(orderId, info = {}) {
+  let question = 'Are you sure you want to cancel this order?';
+  if (info.paidOnline) {
+    const percent = Date.now() < info.fullRefundEndsAt ? 100 : 25;
+    const amount = Math.round(info.total * percent) / 100;
+    question = percent === 100
+      ? `Cancel this order? The full ₹${info.total} will be refunded.`
+      : `Cancel this order? Only 25% (₹${amount} of ₹${info.total}) will be refunded, because the 30-second full-refund window has passed.`;
+  }
+  if (!confirm(question)) return;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.message || 'Failed to cancel order');
-    }
-
-    showToast('Order cancelled successfully', 'success');
+    const data = await cancelOrderRequest(orderId);
+    const r = data.refund;
+    showToast(r && r.status === 'processed'
+      ? `Order cancelled. ₹${r.amount_rupees} (${r.percent}%) is being refunded.`
+      : 'Order cancelled successfully', 'success');
     loadOrderHistory();
   } catch (error) {
     showToast(error.message, 'error');
   }
+}
+
+// One line about money back, for cancelled online orders.
+function refundLine(order) {
+  if (order.payment_method !== 'online' || order.status !== 'Cancelled') return '';
+  const rupees = (order.refund_amount || 0) / 100;
+  if (order.refund_status === 'done') return `<div class="mt-2 small text-success"><i class="bi bi-arrow-return-left"></i> Refunded ₹${rupees} to your payment method.</div>`;
+  if (order.refund_status === 'failed') return '<div class="mt-2 small text-warning"><i class="bi bi-hourglass-split"></i> Your refund hit a problem and will be retried by the restaurant.</div>';
+  return '<div class="mt-2 small text-muted"><i class="bi bi-hourglass-split"></i> Your refund is being processed.</div>';
 }
 
 // Load order history from API
@@ -329,10 +515,11 @@ async function loadOrderHistory() {
           </div>
           ${order.delivery && order.delivery.address_line ? `
             <div class="mt-2 small text-muted">
-              Delivering to ${escapeText(order.delivery.name)}, ${escapeText(formatAddress(order.delivery))}. Phone ${escapeText(order.delivery.phone)}. Cash on delivery.
+              Delivering to ${escapeText(order.delivery.name)}, ${escapeText(formatAddress(order.delivery))}. Phone ${escapeText(order.delivery.phone)}. ${order.payment_method === 'online' ? 'Paid online (test mode).' : 'Cash on delivery.'}
             </div>
           ` : ''}
-          <div class="mt-3 d-flex gap-2">
+          ${refundLine(order)}
+          <div class="mt-3 d-flex gap-2 flex-wrap">
             <button class="btn btn-outline-warning btn-sm order-again-btn" data-order-id="${order._id}">
               <i class="bi bi-arrow-repeat"></i> Order Again
             </button>
@@ -340,7 +527,7 @@ async function loadOrderHistory() {
               <i class="bi bi-truck"></i> Track Order
             </button>
             ${order.status === 'Received' ? `
-              <button class="btn btn-outline-danger btn-sm cancel-order-btn" data-order-id="${order._id}">
+              <button class="btn btn-outline-danger btn-sm cancel-order-btn" data-order-id="${order._id}" data-index="${index}">
                 <i class="bi bi-x-circle"></i> Cancel Order
               </button>
             ` : ''}
@@ -358,8 +545,17 @@ async function loadOrderHistory() {
       btn.addEventListener('click', () => reorderPastOrder(btn.dataset.orderId, orders));
     });
 
+    const loadedAt = Date.now();
     document.querySelectorAll('.cancel-order-btn').forEach((btn) => {
-      btn.addEventListener('click', () => cancelOrder(btn.dataset.orderId));
+      btn.addEventListener('click', () => {
+        const o = orders[Number(btn.dataset.index)];
+        const paidOnline = o.payment_method === 'online' && o.payment_status === 'paid';
+        cancelOrder(btn.dataset.orderId, {
+          paidOnline,
+          total: o.total_amount,
+          fullRefundEndsAt: loadedAt + (o.full_refund_seconds_left || 0) * 1000
+        });
+      });
     });
 
   } catch (error) {
@@ -385,6 +581,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+  document.querySelectorAll('input[name="payMethod"]').forEach((r) => r.addEventListener('change', updatePayUi));
+  updatePayUi();
 
   const placeOrderBtn = document.getElementById('placeOrderBtn');
   if (placeOrderBtn) {

@@ -107,14 +107,26 @@
             </div>
           </form>
 
-          <div class="border rounded p-3 mt-4 bg-light">
-            <div class="fw-semibold">Payment: cash on delivery</div>
-            <div class="text-muted small">Pay the delivery person when your order arrives.</div>
-          </div>
+          <fieldset class="border rounded p-3 mt-4">
+            <legend class="fw-semibold fs-6 float-none w-auto px-2 mb-0">Payment</legend>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="payMethod" id="payOnline" value="online" checked>
+              <label class="form-check-label" for="payOnline">
+                Pay online <span class="text-muted small">(Razorpay, test mode: no real money is charged)</span>
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="payMethod" id="payCod" value="cod">
+              <label class="form-check-label" for="payCod">Cash on delivery <span class="text-muted small">(pay the delivery person)</span></label>
+            </div>
+            <p class="small text-muted mt-3 mb-0" id="payHint">
+              Cancel within 30 seconds of paying for a full refund. After that, you can still cancel until the kitchen starts, and 25% is refunded.
+            </p>
+          </fieldset>
 
           <div id="checkoutError" class="alert alert-danger d-none mt-3"></div>
           <button class="btn btn-warning w-100 fw-semibold py-2 mt-3" id="placeOrderBtn">
-            Confirm & Place Order <i class="bi bi-check-circle ms-1"></i>
+            <span id="placeOrderLabel">Pay now</span> <i class="bi bi-check-circle ms-1"></i>
           </button>
         </div>
       </div>
@@ -139,7 +151,21 @@
           <p class="text-muted">Order ID: <span id="confirmOrderId" class="fw-semibold"></span></p>
           <p class="text-muted">Total Amount: <span id="confirmTotal" class="fw-semibold"></span></p>
           <p class="text-muted mb-1">Delivering to: <span id="confirmAddress" class="fw-semibold"></span></p>
-          <p class="text-muted mb-4">Payment: <span class="fw-semibold">Cash on delivery</span></p>
+          <p class="text-muted mb-4">Payment: <span id="confirmPaymentText" class="fw-semibold">Cash on delivery</span></p>
+
+          <!-- Online orders only: 30 seconds to cancel for a full refund -->
+          <div id="undoBox" class="border rounded p-3 mx-auto mb-4 d-none" style="max-width: 460px;">
+            <div id="undoActive">
+              <div class="fw-semibold">Changed your mind?</div>
+              <p class="small text-muted mb-2">Cancel in the next <strong id="undoSeconds">30</strong> seconds and get <strong>100% back</strong>.</p>
+              <div class="progress mb-3" style="height: 6px;"><div id="undoBar" class="progress-bar bg-warning" style="width: 100%;"></div></div>
+              <button type="button" class="btn btn-outline-danger btn-sm" id="undoCancelBtn"><i class="bi bi-x-circle"></i> Cancel and refund in full</button>
+            </div>
+            <div id="undoLate" class="d-none small text-muted">
+              The full-refund window has ended. You can still cancel from the order list below until the kitchen starts preparing it, and 25% will be refunded.
+            </div>
+          </div>
+          <div id="undoResult" class="alert alert-success d-none mx-auto" style="max-width: 460px;"></div>
 
           <!-- Status Tracker Bar -->
           <div id="confirmStatusTracker"></div>
@@ -167,6 +193,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="js/config.js"></script>
   <script src="js/toast.js"></script>
   <script src="js/pager.js"></script>

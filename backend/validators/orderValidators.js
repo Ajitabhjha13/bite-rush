@@ -30,6 +30,10 @@ const deliveryValidation = [
 const placeOrderValidation = [
   ...deliveryValidation,
 
+  body('payment_method')
+    .optional()
+    .isIn(['cod', 'online']).withMessage('Payment method must be cod or online.'),
+
   body('cart_items')
     .isArray({ min: 1 }).withMessage('Cart must contain at least one item.'),
 
@@ -66,4 +70,14 @@ const cancelOrderValidation = [
   param('id').isMongoId().withMessage('Invalid order id.')
 ];
 
-module.exports = { placeOrderValidation, updateOrderStatusValidation, cancelOrderValidation };
+const confirmPaymentValidation = [
+  param('id').isMongoId().withMessage('Invalid order id.'),
+  body('razorpay_payment_id').isString().trim().isLength({ min: 5, max: 64 }).withMessage('Payment id is required.'),
+  body('razorpay_signature').isString().trim().isLength({ min: 10, max: 128 }).withMessage('Payment signature is required.')
+];
+
+const retryRefundValidation = [
+  param('id').isMongoId().withMessage('Invalid order id.')
+];
+
+module.exports = { placeOrderValidation, updateOrderStatusValidation, cancelOrderValidation, confirmPaymentValidation, retryRefundValidation };

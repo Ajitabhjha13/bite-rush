@@ -184,7 +184,7 @@ async function cancelWithRefund({ reservationId, userId, now = new Date() }) {
 }
 
 module.exports = {
-  paymentsEnabled, setClient, verifyCheckoutSignature, verifyWebhookSignature,
+  paymentsEnabled, setClient, getClient, verifyCheckoutSignature, verifyWebhookSignature,
   createOrderForReservation, refundPayment, applyCapturedPayment, confirmWithPayment,
   handleWebhookEvent, cancelWithRefund
 };

@@ -5,19 +5,24 @@ const {
   getMyOrders,
   getAllOrders,
   updateOrderStatus,
-  cancelOrder
+  cancelOrder,
+  confirmPayment,
+  retryRefund
 } = require('../controllers/orderController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
-const { placeOrderValidation, updateOrderStatusValidation, cancelOrderValidation } = require('../validators/orderValidators');
+const { placeOrderValidation, updateOrderStatusValidation, cancelOrderValidation, confirmPaymentValidation, retryRefundValidation } = require('../validators/orderValidators');
+const { orderLimiter } = require('../middleware/rateLimiters');
 const { handleValidationErrors } = require('../middleware/validate');
 
 // Customer routes (must be logged in)
-router.post('/', protect, placeOrderValidation, handleValidationErrors, placeOrder);
+router.post('/', protect, orderLimiter, placeOrderValidation, handleValidationErrors, placeOrder);
 router.get('/my', protect, getMyOrders);
-router.put('/:id/cancel', protect, cancelOrderValidation, handleValidationErrors, cancelOrder);
+router.post('/:id/confirm-payment', protect, orderLimiter, confirmPaymentValidation, handleValidationErrors, confirmPayment);
+router.put('/:id/cancel', protect, orderLimiter, cancelOrderValidation, handleValidationErrors, cancelOrder);
 
 // Admin routes
 router.get('/admin/all', protect, adminOnly, getAllOrders);
+router.put('/admin/:id/retry-refund', protect, adminOnly, retryRefundValidation, handleValidationErrors, retryRefund);
 router.put('/admin/:id/status', protect, adminOnly, updateOrderStatusValidation, handleValidationErrors, updateOrderStatus);
 
 module.exports = router;
