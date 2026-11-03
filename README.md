@@ -54,7 +54,7 @@ I kept iterating long after the minimum feature set was done: item customization
 
 ## Highlights
 
-| **Full ordering flow**<br>Category-filtered **menu**, a persistent **cart** (localStorage, survives refresh), **quantity steppers** on the menu card, and a **checkout** with order confirmation. | **Delivery address and cash on delivery**<br>Checkout collects name, phone, address and pincode. Delivery is limited to Vadodara (pincodes 390001 to 390025) and checked on both the client and the server. The address is saved with each order only, with no address book. |
+| **Full ordering flow**<br>Category-filtered **menu**, a persistent **cart** (localStorage, survives refresh), **quantity steppers** on the menu card, and a **checkout** with order confirmation. | **Delivery address and online payment**<br>Pay with Razorpay (test mode) or cash on delivery. After paying online, a 30-second window allows a full refund; a later cancel refunds 25%. Checkout collects name, phone, address and pincode. Delivery is limited to Vadodara (pincodes 390001 to 390025) and checked on both the client and the server. The address is saved with each order only, with no address book. |
 | --- | --- |
 | **Per-dish customization**<br>Items can offer a **spice level picker** (Mild / Medium / Hot) in a detail modal. It is opt-in per dish and validated on the server, so only dishes that support it can carry a spice choice into an order. | **Combo meals**<br>Admin-built bundles of existing menu items at a discounted price, with the **savings computed** from the current prices of the items inside, never a stale, hand-typed number. |
 | **Order lifecycle**<br>Received, Preparing, Ready, Delivered, with a status tracker on the My Orders page. Customers can **cancel** their own order while it is still queued and **reorder** a past order in one click. | **Server-validated pricing**<br>Every order total is recalculated from the database at checkout. The price a client sends is never trusted, which closes the most common e-commerce tampering vector. |
@@ -142,7 +142,7 @@ A check-then-insert in Node has a race: two customers can both see a free table.
 A seat is held for 2 minutes while the customer pays. An expired hold stops counting as taken immediately, so abandoned checkouts never block a table. If a payment still arrives after the hold expired, the server tries to re-take that seat in one atomic update. If someone else has it by then, the payment is refunded in full instead of double-booking.
 
 **The server decides the money; the client only displays it.**
-Order totals are recalculated from the database. The booking deposit comes from server configuration. The refund preview in the browser is only a preview. The server computes the real refund from the current time (100% at 6 hours or more, 50% at 2 hours or more, otherwise 0, and always 100% when the restaurant cancels).
+Order totals are recalculated from the database. Online food orders use the same rule: the amount sent to Razorpay is computed on the server, the order stays hidden until the payment is confirmed (browser callback or webhook, through one shared function), and an unpaid order expires after 15 minutes. A paid order cancelled within 30 seconds (plus a 5 second grace) is refunded in full, a later cancel refunds 25%, and a restaurant cancel always refunds 100%. The booking deposit comes from server configuration. The refund preview in the browser is only a preview. The server computes the real refund from the current time (100% at 6 hours or more, 50% at 2 hours or more, otherwise 0, and always 100% when the restaurant cancels).
 
 **One code path confirms a payment, whoever tells us first.**
 Razorpay can reach us twice: the browser callback and a signed webhook. Both call the same `applyCapturedPayment` function, so they cannot disagree. The webhook signature is checked against the *raw* request body (the webhook route is mounted before `express.json()`), and each event id is stored so a retry is a no-op.
@@ -160,7 +160,7 @@ Behind Render and Cloudflare, `req.ip` can be a proxy. The limiter prefers the e
 Order lists fetch their line items with one `$in` query for the whole page instead of one query per order, and page sizes are capped on the server no matter what the client asks for.
 
 **Tests never touch real services.**
-The suite (120 tests) runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
+The suite (152 tests) runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
 
 ---
 
@@ -249,7 +249,7 @@ Create a `.env` file in `backend/` (see `.env.example`):
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_long_random_secret
-# Table booking payments (Razorpay TEST keys only), see .env.example
+# Table booking and food order payments (Razorpay TEST keys only), see .env.example
 RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
 RAZORPAY_KEY_SECRET=your_razorpay_test_key_secret
 RAZORPAY_WEBHOOK_SECRET=another_long_random_string
@@ -284,9 +284,10 @@ Serve the `frontend/` folder with any static file server (for example VS Code's 
 | GET | `/api/menu` | Public | List all available menu items |
 | GET | `/api/menu/category/:id` | Public | Filter menu items by category |
 | GET | `/api/combos` | Public | List all available combo meals (with savings) |
-| POST | `/api/orders` | Customer | Place an order (items and/or combos) with delivery details, cash on delivery |
+| POST | `/api/orders` | Customer | Place an order (items and/or combos) with delivery details; `payment_method` is `online` or `cod` |
+| POST | `/api/orders/:id/confirm-payment` | Customer | Confirm an online payment (signature verified) |
 | GET | `/api/orders/my?page=` | Customer | Order history (paginated) |
-| PUT | `/api/orders/:id/cancel` | Customer | Cancel your own order (only while status is Received) |
+| PUT | `/api/orders/:id/cancel` | Customer | Cancel your own order (only while status is Received); a paid online order is refunded 100% within 30 seconds of paying, otherwise 25% |
 | GET | `/api/menu/admin/all?page=` | Admin | List all menu items, including unavailable ones (paginated) |
 | POST / PUT / DELETE | `/api/menu/admin/...` | Admin | Menu item CRUD |
 | POST / PUT / DELETE | `/api/combos/admin/...` | Admin | Combo CRUD |
@@ -300,7 +301,8 @@ Serve the `frontend/` folder with any static file server (for example VS Code's 
 | PUT | `/api/bookings/admin/:id/attendance` · `/cancel` · `/retry-refund` | Admin | Seated / no-show; cancel with a full refund; retry a failed refund |
 | PUT | `/api/tables/:id` | Admin | Switch a table online / walk-in or in / out of service |
 | GET | `/api/orders/admin/all?page=` | Admin | View all orders (paginated) |
-| PUT | `/api/orders/admin/:id/status` | Admin | Update an order's status |
+| PUT | `/api/orders/admin/:id/status` | Admin | Update an order's status (cancelling a paid order refunds it in full) |
+| PUT | `/api/orders/admin/:id/retry-refund` | Admin | Retry a failed food-order refund |
 
 All protected routes require an `Authorization: Bearer <token>` header.
 Paginated list endpoints return `{ items, total, page, limit, pages }`. Over-limit requests get a `429` with a plain-language message.
