@@ -452,6 +452,19 @@ function refundLine(order) {
   return '<div class="mt-2 small text-muted"><i class="bi bi-hourglass-split"></i> Your refund is being processed.</div>';
 }
 
+// If the "order placed" screen is open, keep its progress tracker in step with the real status.
+function syncConfirmationTracker(orders) {
+  const panel = document.getElementById('confirmationPanel');
+  if (!panel || panel.classList.contains('d-none')) return;
+  const mine = orders.find((o) => o._id === document.getElementById('confirmOrderId').textContent);
+  if (!mine) return;
+  document.getElementById('confirmStatusTracker').innerHTML = mine.status === 'Cancelled'
+    ? '<p class="text-danger small mb-0"><i class="bi bi-x-circle"></i> This order was cancelled.</p>'
+    : renderStatusTracker(mine.status);
+  // Once the kitchen has started, the cancel window is over whatever the clock says.
+  if (mine.status !== 'Received') document.getElementById('undoBox').classList.add('d-none');
+}
+
 // Load order history from API
 let historyPage = 1;
 
@@ -484,6 +497,7 @@ async function loadOrderHistory() {
       historyPage = data.pages;
       return loadOrderHistory();
     }
+    syncConfirmationTracker(orders);
     renderPager('historyPager', container, data, (p) => { historyPage = p; loadOrderHistory(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
     if (orders.length === 0) {
@@ -566,6 +580,10 @@ async function loadOrderHistory() {
 document.addEventListener('DOMContentLoaded', () => {
   renderCheckoutPanel();
   loadOrderHistory();
+  startLiveOrders({
+    onChange: loadOrderHistory,
+    onState: (up) => { document.getElementById('liveState').textContent = up ? 'Live' : ''; }
+  });
 
   Object.values(DELIVERY_FIELDS).forEach((id) => {
     const el = document.getElementById(id);

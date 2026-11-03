@@ -7,6 +7,8 @@ const limits = require('../config/limits');
 const { DELIVERY_CITY } = require('../config/delivery');
 const rules = require('../config/orderPayment');
 const ops = require('../services/orderPaymentService');
+const events = require('../services/orderEvents');
+const User = require('../models/User');
 
 // @route   POST /api/orders
 // @desc    Place a new order (customer)
@@ -124,6 +126,7 @@ const placeOrder = async (req, res) => {
       }
     }
 
+    events.publish(order);
     res.status(201).json({
       message: 'Order placed successfully!',
       order_id: order._id,
@@ -226,6 +229,7 @@ const updateOrderStatus = async (req, res) => {
       refund = await ops.refundForCancellation(order, { byRestaurant: true });
     }
 
+    events.publish(order);
     res.status(200).json({ message: 'Order status updated', order: await Order.findById(order._id), refund });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -266,6 +270,7 @@ const cancelOrder = async (req, res) => {
     }
 
     const refund = await ops.refundForCancellation(cancelled, { now: new Date() });
+    events.publish(cancelled);
 
     res.status(200).json({
       message: 'Order cancelled successfully',
@@ -287,6 +292,7 @@ const confirmPayment = async (req, res) => {
       paymentId: req.body.razorpay_payment_id,
       signature: req.body.razorpay_signature
     });
+    events.publish(order);
     res.status(200).json({
       message: 'Payment received. Your order is placed!',
       order,
@@ -303,6 +309,7 @@ const confirmPayment = async (req, res) => {
 const retryRefund = async (req, res) => {
   try {
     const out = await ops.retryRefund(req.params.id);
+    events.publish(out.order);
     res.status(200).json({ message: 'Refund sent.', order: out.order, amount_rupees: out.amount / 100 });
   } catch (error) {
     if (error instanceof ops.OrderPayError) return res.status(error.status).json({ message: error.message });
@@ -310,7 +317,25 @@ const retryRefund = async (req, res) => {
   }
 };
 
+// @route   POST /api/orders/stream-ticket
+// @desc    A short-lived, single-use ticket to open the live stream (a JWT must not go in a URL)
+const streamTicket = (req, res) => res.status(200).json(events.issueTicket(req.user));
+
+// @route   GET /api/orders/stream?ticket=
+// @desc    Live "something changed" pings (Server-Sent Events). Customers hear about their own orders, admins about all.
+const orderStream = async (req, res) => {
+  const who = events.redeemTicket(String(req.query.ticket || ''));
+  if (!who) return res.status(401).json({ message: 'This live link has expired. Reload the page.' });
+  const user = await User.findById(who.userId).select('role');
+  if (!user) return res.status(401).json({ message: 'User not found' });
+  if (!events.addStream(res, { userId: who.userId, role: user.role })) {
+    return res.status(429).json({ message: 'Too many open tabs. Close one and reload.' });
+  }
+};
+
 module.exports = {
+  streamTicket,
+  orderStream,
   placeOrder,
   getMyOrders,
   getAllOrders,

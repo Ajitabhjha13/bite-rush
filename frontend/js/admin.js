@@ -561,6 +561,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addComboBtn').addEventListener('click', resetComboForm);
   document.getElementById('saveComboBtn').addEventListener('click', saveCombo);
 
+  // New and changed orders appear at once; the 30-second refresh below stays as the safety net.
+  startLiveOrders({
+    onChange: () => {
+      if (!document.getElementById('ordersTab').classList.contains('d-none')) loadOrders();
+    },
+    onState: (up) => {
+      document.getElementById('liveNote').innerHTML = up
+        ? '<i class="bi bi-broadcast"></i> Live: new orders appear instantly'
+        : '<i class="bi bi-arrow-repeat"></i> Auto-refreshes every 30s';
+    }
+  });
+
   autoRefreshInterval = setInterval(() => {
     const ordersTabVisible = !document.getElementById('ordersTab').classList.contains('d-none');
     if (ordersTabVisible) loadOrders();
