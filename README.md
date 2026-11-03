@@ -58,7 +58,7 @@ I kept iterating long after the minimum feature set was done: item customization
 | --- | --- |
 | **Per-dish customization**<br>Items can offer a **spice level picker** (Mild / Medium / Hot) in a detail modal. It is opt-in per dish and validated on the server, so only dishes that support it can carry a spice choice into an order. | **Combo meals**<br>Admin-built bundles of existing menu items at a discounted price, with the **savings computed** from the current prices of the items inside, never a stale, hand-typed number. |
 | **Order lifecycle**<br>Received, Preparing, Ready, Delivered, with a status tracker on the My Orders page. Customers can **cancel** their own order while it is still queued and **reorder** a past order in one click. | **Server-validated pricing**<br>Every order total is recalculated from the database at checkout. The price a client sends is never trusted, which closes the most common e-commerce tampering vector. |
-| **Table booking with deposits**<br>Day-ahead reservations (5 slots, 10 tables, a separate online-only table pool). A seat is **held for 2 minutes** while the customer pays a ₹100 deposit through **Razorpay (test mode)**. Double-booking is prevented **in the database** with partial unique indexes, and a **tiered refund** (100% / 50% / 0%) applies on cancellation. | **Admin dashboard**<br>A protected dashboard for menu management, incoming orders with delivery details (auto-refreshing), combo management, and a **reservations grid**: table by time slot for any date, with Seated / No-show check-in, restaurant-side cancel with a full refund, a retry for failed refunds, and per-table online / walk-in switches. |
+| **Table booking with deposits**<br>Day-ahead reservations (5 slots, 10 tables, a separate online-only table pool). A seat is **held for 2 minutes** while the customer pays a ₹100 deposit through **Razorpay (test mode)**. Double-booking is prevented **in the database** with partial unique indexes, and a **tiered refund** (100% / 50% / 0%) applies on cancellation. | **Admin dashboard**<br>A protected dashboard for menu management, incoming orders with delivery details (updated live), combo management, and a **reservations grid**: table by time slot for any date, with Seated / No-show check-in, restaurant-side cancel with a full refund, a retry for failed refunds, and per-table online / walk-in switches. |
 | **Input validation**<br>Every write endpoint runs through `express-validator` on the server. Registration, login, menu changes, delivery details and bookings all reject malformed input before it reaches the database. | **Legal pages**<br>Privacy Policy and Terms pages written to match what the app actually stores, with a clear demo disclaimer. |
 
 ---
@@ -160,7 +160,7 @@ Behind Render and Cloudflare, `req.ip` can be a proxy. The limiter prefers the e
 Order lists fetch their line items with one `$in` query for the whole page instead of one query per order, and page sizes are capped on the server no matter what the client asks for.
 
 **Tests never touch real services.**
-The suite (152 tests) runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
+The suite (157 tests) runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
 
 ---
 
@@ -287,6 +287,8 @@ Serve the `frontend/` folder with any static file server (for example VS Code's 
 | POST | `/api/orders` | Customer | Place an order (items and/or combos) with delivery details; `payment_method` is `online` or `cod` |
 | POST | `/api/orders/:id/confirm-payment` | Customer | Confirm an online payment (signature verified) |
 | GET | `/api/orders/my?page=` | Customer | Order history (paginated) |
+| POST | `/api/orders/stream-ticket` | Customer | One-time ticket (valid 60 s) for the live stream |
+| GET | `/api/orders/stream?ticket=` | Ticket | Live "an order changed" pings (Server-Sent Events); customers hear about their own orders, admins about all |
 | PUT | `/api/orders/:id/cancel` | Customer | Cancel your own order (only while status is Received); a paid online order is refunded 100% within 30 seconds of paying, otherwise 25% |
 | GET | `/api/menu/admin/all?page=` | Admin | List all menu items, including unavailable ones (paginated) |
 | POST / PUT / DELETE | `/api/menu/admin/...` | Admin | Menu item CRUD |

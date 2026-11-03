@@ -7,12 +7,18 @@ const {
   updateOrderStatus,
   cancelOrder,
   confirmPayment,
-  retryRefund
+  retryRefund,
+  streamTicket,
+  orderStream
 } = require('../controllers/orderController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 const { placeOrderValidation, updateOrderStatusValidation, cancelOrderValidation, confirmPaymentValidation, retryRefundValidation } = require('../validators/orderValidators');
 const { orderLimiter } = require('../middleware/rateLimiters');
 const { handleValidationErrors } = require('../middleware/validate');
+
+// Live updates. Ticket needs a login; the stream itself is opened with the one-time ticket.
+router.post('/stream-ticket', protect, orderLimiter, streamTicket);
+router.get('/stream', orderStream);
 
 // Customer routes (must be logged in)
 router.post('/', protect, orderLimiter, placeOrderValidation, handleValidationErrors, placeOrder);
