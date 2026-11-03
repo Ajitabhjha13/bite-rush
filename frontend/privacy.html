@@ -47,7 +47,7 @@
         <li><strong>Account:</strong> your name, email address and password. The password is stored only as a salted bcrypt hash, never in plain text.</li>
         <li><strong>Food orders:</strong> the items you order, the total, the time, and the delivery details you type in: name, phone number, address, area, optional landmark and pincode. The address is saved with that order only. We do not keep an address book.</li>
         <li><strong>Table bookings:</strong> the date, time slot, number of guests, table, booking status and deposit and refund status.</li>
-        <li><strong>Payment references:</strong> Razorpay order, payment and refund ids for table deposits. We never see or store your card, UPI or bank details. Those are handled by Razorpay.</li>
+        <li><strong>Payment references:</strong> Razorpay order, payment and refund ids for table deposits and online food orders. We never see or store your card, UPI or bank details. Those are handled by Razorpay.</li>
         <li><strong>Technical data:</strong> our hosting provider and server keep request logs, which include your IP address, the page requested, and the time. We use your IP address for rate limiting to prevent abuse.</li>
       </ul>
 
@@ -68,7 +68,7 @@
       <ul>
         <li><strong>Render</strong> hosts the website and the API.</li>
         <li><strong>MongoDB Atlas</strong> hosts the database.</li>
-        <li><strong>Razorpay</strong> processes table deposits and refunds (test mode).</li>
+        <li><strong>Razorpay</strong> processes table deposits, online food payments and refunds (test mode).</li>
         <li><strong>jsDelivr</strong> serves Bootstrap and icon files, <strong>Google Fonts</strong> serves fonts, <strong>Google Maps</strong> shows the embedded map, and <strong>Unsplash</strong> and <strong>placehold.co</strong> serve images. Your browser contacts these services directly, so they may see your IP address.</li>
       </ul>
       <p>Each of these has its own privacy policy. Some of them process data outside India.</p>

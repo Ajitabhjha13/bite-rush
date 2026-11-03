@@ -96,7 +96,7 @@ async function loadOrders(isInitialLoad = false) {
           return `${label}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`;
         }).join(', ')}</td>
         <td class="small">${deliveryCell(order.delivery)}</td>
-        <td class="fw-semibold">₹${order.total_amount}</td>
+        <td class="fw-semibold">₹${order.total_amount}<br>${paymentBadge(order)}</td>
         <td>
           <select class="form-select form-select-sm admin-status-select" data-order-id="${order._id}">
             <option value="Received" ${order.status === 'Received' ? 'selected' : ''}>Received</option>
@@ -111,7 +111,11 @@ async function loadOrders(isInitialLoad = false) {
     `).join('');
 
     document.querySelectorAll('.admin-status-select').forEach((select) => {
-      select.addEventListener('change', () => updateOrderStatusAdmin(select.dataset.orderId, select.value));
+      select.dataset.prev = select.value;
+      select.addEventListener('change', () => updateOrderStatusAdmin(select.dataset.orderId, select.value, select));
+    });
+    document.querySelectorAll('.retry-refund-btn').forEach((btn) => {
+      btn.addEventListener('click', () => retryOrderRefund(btn.dataset.orderId));
     });
 
   } catch (error) {
@@ -119,7 +123,43 @@ async function loadOrders(isInitialLoad = false) {
   }
 }
 
-async function updateOrderStatusAdmin(orderId, newStatus) {
+// Small payment label under the amount: how it was paid and what happened to the money.
+function paymentBadge(order) {
+  if (order.payment_method !== 'online') return '<span class="badge text-bg-secondary fw-normal">Cash on delivery</span>';
+  const rupees = (order.refund_amount || 0) / 100;
+  if (order.refund_status === 'failed') {
+    return `<span class="badge text-bg-danger fw-normal">Refund failed</span><br>
+      <button class="btn btn-outline-danger btn-sm mt-1 retry-refund-btn" data-order-id="${order._id}">Retry refund</button>`;
+  }
+  if (order.refund_status === 'processing') return '<span class="badge text-bg-warning fw-normal">Refund in progress</span>';
+  if (order.payment_status === 'refunded') return `<span class="badge text-bg-info fw-normal">Paid online, refunded ₹${rupees}</span>`;
+  if (order.payment_status === 'partially_refunded') return `<span class="badge text-bg-info fw-normal">Paid online, refunded ₹${rupees} (25%)</span>`;
+  return '<span class="badge text-bg-success fw-normal">Paid online</span>';
+}
+
+async function retryOrderRefund(orderId) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/orders/admin/${orderId}/retry-refund`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Refund failed');
+    showToast(`Refund of ₹${data.amount_rupees} sent.`, 'success');
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+  loadOrders();
+}
+
+async function updateOrderStatusAdmin(orderId, newStatus, selectEl) {
+  if (newStatus === 'Cancelled' && selectEl) {
+    const paid = selectEl.closest('tr').querySelector('.badge.text-bg-success');
+    const msg = paid
+      ? 'Cancel this order? It was paid online, so the customer will be refunded in full.'
+      : 'Cancel this order?';
+    if (!confirm(msg)) { selectEl.value = selectEl.dataset.prev; return; }
+  }
   try {
     const res = await fetch(`${API_BASE_URL}/orders/admin/${orderId}/status`, {
       method: 'PUT',
@@ -135,7 +175,9 @@ async function updateOrderStatusAdmin(orderId, newStatus) {
       throw new Error(data.message || 'Failed to update status');
     }
 
-    showToast('Order status updated successfully', 'success');
+    showToast(newStatus === 'Cancelled' && selectEl && selectEl.closest('tr').querySelector('.badge.text-bg-success')
+      ? 'Order cancelled and refunded in full.' : 'Order status updated successfully', 'success');
+    loadOrders(true);
   } catch (error) {
     showToast(error.message, 'error');
     loadOrders();
