@@ -338,7 +338,7 @@ async function loadCombosAdmin() {
     if (!res.ok) throw new Error(combos.message || 'Failed to load combos');
 
     if (combos.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No combos yet — click "Add Combo" to create one.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No combos yet. Click "Add Combo" to create one.</td></tr>';
       return;
     }
 
@@ -383,7 +383,7 @@ async function loadMenuItemsChecklist(selectedIds = []) {
     container.innerHTML = allMenuItemsForCombo.map((item) => `
       <div class="form-check">
         <input class="form-check-input combo-item-checkbox" type="checkbox" value="${item._id}" data-price="${item.price}" id="comboItem-${item._id}" ${selectedIds.includes(item._id) ? 'checked' : ''}>
-        <label class="form-check-label small" for="comboItem-${item._id}">${item.name} — ₹${item.price}</label>
+        <label class="form-check-label small" for="comboItem-${item._id}">${item.name} (₹${item.price})</label>
       </div>
     `).join('');
 
@@ -696,8 +696,8 @@ function openReservation(id) {
   document.getElementById('resModalBody').innerHTML =
     line('Table', `T${table.number} (${table.seats} seats)`) +
     line('Date & time', `${resState.date}, ${slotLabel(slot)}`) +
-    line('Customer', escapeHtml((cell.customer && cell.customer.name) || '—')) +
-    line('Email', escapeHtml((cell.customer && cell.customer.email) || '—')) +
+    line('Customer', escapeHtml((cell.customer && cell.customer.name) || '-')) +
+    line('Email', escapeHtml((cell.customer && cell.customer.email) || '-')) +
     line('Guests', cell.guests) +
     line('Status', cell.status === 'held' ? 'Held, waiting for payment' : 'Confirmed') +
     line('Deposit', `₹${(cell.amount || 0) / 100} (${escapeHtml(cell.payment_status)})`) +

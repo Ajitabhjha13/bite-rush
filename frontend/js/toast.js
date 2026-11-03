@@ -1,5 +1,5 @@
 // ===== TOAST NOTIFICATIONS =====
-// Reusable replacement for alert() — non-blocking, auto-dismisses.
+// Reusable replacement for alert() - non-blocking, auto-dismisses.
 // Usage: showToast('Item added to cart!', 'success')
 //        showToast('Something went wrong', 'error')
 

@@ -4,7 +4,7 @@ const mongoIdParam = (paramName) =>
   param(paramName).isMongoId().withMessage(`Invalid ${paramName}.`);
 
 // Accepts either a full external URL (https://...) OR a local relative
-// image path (e.g. images/menu/dish.jpg) — since menu photos can now be
+// image path (e.g. images/menu/dish.jpg) - since menu photos can now be
 // hosted locally in the frontend's own images/menu folder, not just Unsplash.
 function imageUrlValidator(value) {
   const isFullUrl = /^https?:\/\/.+/i.test(value);

@@ -8,7 +8,7 @@ const ORDER_STATUS_STEPS = [
 ];
 
 // Renders a tracker with steps up to and including the order's CURRENT status
-// marked active — used both for the just-placed confirmation and order history.
+// marked active - used both for the just-placed confirmation and order history.
 function renderStatusTracker(currentStatus) {
   const currentIndex = ORDER_STATUS_STEPS.findIndex((s) => s.key === currentStatus);
 

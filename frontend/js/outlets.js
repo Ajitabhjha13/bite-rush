@@ -20,7 +20,6 @@ async function loadOutlets() {
         outletName: `Bite Rush ${cat.name}`,
         tagline: `Explore our ${cat.name} selection.`,
         icon: 'bi-grid-fill',
-        deliveryTime: '20-30 min',
         image: 'https://placehold.co/400x220/f1f1f1/999999?text=' + encodeURIComponent(cat.name)
       };
 
@@ -29,7 +28,6 @@ async function loadOutlets() {
           <a href="menu.html?category=${cat._id}" class="text-decoration-none">
             <div class="card menu-card outlet-card h-100">
               <img src="${info.image}" alt="${info.outletName}" onerror="this.onerror=null; this.src='https://placehold.co/400x220/f1f1f1/999999?text=No+Image';">
-              <span class="delivery-time-badge"><i class="bi bi-clock"></i> ${info.deliveryTime}</span>
               <div class="card-body d-flex flex-column">
                 <div class="icon-circle-lg mb-3"><i class="bi ${info.icon}"></i></div>
                 <h5 class="card-title fw-semibold text-dark">${info.outletName}</h5>

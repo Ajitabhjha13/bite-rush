@@ -1,8 +1,8 @@
 // One-off script to set realistic, dish-specific prep times.
-// Safe to run multiple times — just updates prep_time for matching item names.
+// Safe to run multiple times - just updates prep_time for matching item names.
 //
 // Usage: node updatePrepTimes.js
-// Delete this file once you're done — don't commit it to git.
+// Delete this file once you're done - don't commit it to git.
 
 require('dotenv').config();
 const mongoose = require('mongoose');

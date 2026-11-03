@@ -3,13 +3,13 @@
 //  - Creates any menu item that doesn't exist yet (with the right category,
 //    price, description, veg/non-veg flag, and image).
 //  - If an item ALREADY exists (by name), it just updates its image_url to
-//    your local photo — nothing is duplicated.
+//    your local photo - nothing is duplicated.
 //
 // Safe to run as many times as you want (e.g. next time you add more dishes,
 // just add a new entry to ALL_ITEMS below and re-run this same file).
 //
 // Usage: node setupMenu.js
-// Delete this file once you're happy with the final menu — don't commit it to git.
+// Delete this file once you're happy with the final menu - don't commit it to git.
 
 require('dotenv').config();
 const mongoose = require('mongoose');
@@ -34,14 +34,14 @@ const ALL_ITEMS = [
   { name: 'Fresh Lime Soda', description: 'Refreshing soda with fresh lime juice, served sweet or salted.', price: 70, image: 'fresh-lime-soda.jpg', categoryKeyword: 'beverage', is_veg: true, is_bestseller: false },
   { name: 'Rasmalai', description: 'Soft cottage cheese dumplings soaked in sweetened, cardamom-flavored milk.', price: 120, image: 'rasmalai.jpg', categoryKeyword: 'dessert', is_veg: true, is_bestseller: true },
   { name: 'Chocolate Brownie', description: 'Rich, fudgy chocolate brownie served warm.', price: 150, image: 'chocolate-brownie.jpg', categoryKeyword: 'dessert', is_veg: true, is_bestseller: false },
-  { name: 'Jalebi', description: 'Crispy, syrup-soaked spirals — a classic Indian sweet.', price: 90, image: 'jalebi.jpg', categoryKeyword: 'dessert', is_veg: true, is_bestseller: false },
+  { name: 'Jalebi', description: 'Crispy, syrup-soaked spirals. A classic Indian sweet.', price: 90, image: 'jalebi.jpg', categoryKeyword: 'dessert', is_veg: true, is_bestseller: false },
   { name: 'Paneer Butter Masala', description: 'Cottage cheese cubes simmered in a rich, buttery tomato gravy.', price: 280, image: 'paneer-butter-masala.jpg', categoryKeyword: 'main', is_veg: true, is_bestseller: true },
   { name: 'Dal Makhani', description: 'Slow-cooked black lentils and kidney beans in a creamy, buttery sauce.', price: 220, image: 'dal-makhani.jpg', categoryKeyword: 'main', is_veg: true, is_bestseller: false },
   { name: 'Veg Spring Rolls', description: 'Crispy rolls stuffed with fresh, seasoned vegetables.', price: 180, image: 'veg-spring-rolls.jpg', categoryKeyword: 'starter', is_veg: true, is_bestseller: false },
 
   // ----- Round 2: brand-new dishes -----
   { name: 'Mango Lassi', description: 'Creamy yogurt smoothie blended with fresh mango pulp.', price: 90, image: 'mango-lassi.jpg', categoryKeyword: 'beverage', is_veg: true, is_bestseller: true },
-  { name: 'Buttermilk', description: 'Chilled, spiced yogurt-based drink — a refreshing digestive.', price: 40, image: 'buttermilk.jpg', categoryKeyword: 'beverage', is_veg: true, is_bestseller: false },
+  { name: 'Buttermilk', description: 'Chilled, spiced yogurt-based drink, a refreshing digestive.', price: 40, image: 'buttermilk.jpg', categoryKeyword: 'beverage', is_veg: true, is_bestseller: false },
   { name: 'Iced Tea', description: 'Chilled black tea served over ice with a hint of lemon.', price: 80, image: 'iced-tea.jpg', categoryKeyword: 'beverage', is_veg: true, is_bestseller: false },
 
   { name: 'Kulfi', description: 'Traditional Indian frozen dessert, rich and creamy with cardamom and pistachio.', price: 80, image: 'kulfi.jpg', categoryKeyword: 'dessert', is_veg: true, is_bestseller: false },
@@ -72,7 +72,7 @@ async function setupMenu() {
 
     const categories = await Category.find();
     if (categories.length === 0) {
-      console.log('No categories found — create Starters, Main Course, Beverages, and Desserts first via the admin dashboard.');
+      console.log('No categories found - create Starters, Main Course, Beverages, and Desserts first via the admin dashboard.');
       return;
     }
 
@@ -85,7 +85,7 @@ async function setupMenu() {
       const categoryId = findCategoryId(categories, item.categoryKeyword);
 
       if (!categoryId) {
-        console.log(`⚠  No matching category for "${item.name}" (looking for "${item.categoryKeyword}") — skipped.`);
+        console.log(`⚠  No matching category for "${item.name}" (looking for "${item.categoryKeyword}") - skipped.`);
         skippedNoCategory++;
         continue;
       }

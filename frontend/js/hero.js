@@ -1,7 +1,7 @@
 // ===== HERO ROTATING WORD =====
 // Cycles the highlighted word in the homepage headline (e.g. "Craving fresh Biryani?")
 
-// Matches if ANY word in the dish name starts with the query — so "Biryani"
+// Matches if ANY word in the dish name starts with the query - so "Biryani"
 // correctly finds "Veg Biryani" (kept in sync with the same helper in menu.js).
 function matchesSearchQuery(name, query) {
   const words = name.toLowerCase().split(/\s+/);
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(cycleHeroWord, 2200);
   }
 
-  // "Order Now" reflects real intent to order — get the user logged in upfront
+  // "Order Now" reflects real intent to order - get the user logged in upfront
   // instead of letting them build a cart and only discover the login requirement at checkout.
   const orderNowBtn = document.getElementById('orderNowBtn');
   if (orderNowBtn) {
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Homepage search — deep-links into the menu page with the search query applied
+  // Homepage search - deep-links into the menu page with the search query applied
   const heroSearchForm = document.getElementById('heroSearchForm');
   const heroSearchInput = document.getElementById('heroSearchInput');
   const suggestionsBox = document.getElementById('heroSearchSuggestions');
