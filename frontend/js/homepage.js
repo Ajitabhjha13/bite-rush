@@ -34,7 +34,7 @@ async function loadHomeCategories() {
         <div class="col-sm-6 col-lg-3">
           <a href="menu.html?category=${cat._id}" class="text-decoration-none">
             <div class="card menu-card outlet-card h-100">
-              <img src="${escapeHtml(info.image)}" alt="${escapeHtml(info.outletName)}" onerror="this.onerror=null; this.src='https://placehold.co/400x220/f1f1f1/999999?text=No+Image';">
+              <img loading="lazy" decoding="async" src="${escapeHtml(info.image)}" alt="${escapeHtml(info.outletName)}" onerror="this.onerror=null; this.src='https://placehold.co/400x220/f1f1f1/999999?text=No+Image';">
               <div class="card-body d-flex flex-column">
                 <div class="icon-circle-lg mb-3"><i class="bi ${info.icon}"></i></div>
                 <h5 class="card-title fw-semibold text-dark">${escapeHtml(info.outletName)}</h5>
@@ -72,7 +72,7 @@ async function loadPopularDishes() {
     grid.innerHTML = popular.map((item) => `
       <div class="col-sm-6 col-lg-3">
         <div class="card menu-card">
-          <img src="${escapeHtml(item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image')}"
+          <img loading="lazy" decoding="async" src="${escapeHtml(item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image')}"
                alt="${escapeHtml(item.name)}"
                onerror="this.onerror=null; this.src='https://placehold.co/300x180/f1f1f1/999999?text=No+Image';">
           ${item.is_bestseller ? '<span class="bestseller-badge"><i class="bi bi-star-fill"></i> Bestseller</span>' : ''}
@@ -146,7 +146,7 @@ async function loadCombos() {
     grid.innerHTML = combos.map((combo) => `
       <div class="col-sm-6 col-lg-4">
         <div class="card menu-card combo-card h-100">
-          <img src="${escapeHtml(combo.image_url || 'https://placehold.co/400x220/f1f1f1/999999?text=Combo')}" alt="${escapeHtml(combo.name)}" onerror="this.onerror=null; this.src='https://placehold.co/400x220/f1f1f1/999999?text=Combo';">
+          <img loading="lazy" decoding="async" src="${escapeHtml(combo.image_url || 'https://placehold.co/400x220/f1f1f1/999999?text=Combo')}" alt="${escapeHtml(combo.name)}" onerror="this.onerror=null; this.src='https://placehold.co/400x220/f1f1f1/999999?text=Combo';">
           ${combo.savings > 0 ? `<span class="combo-savings-badge">Save ₹${combo.savings}</span>` : ''}
           <div class="card-body d-flex flex-column">
             <h5 class="card-title fw-semibold">${escapeHtml(combo.name)}</h5>
