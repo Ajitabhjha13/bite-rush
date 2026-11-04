@@ -4,7 +4,8 @@ const { isServiceablePincode, normalizePhone } = require('../config/delivery');
 const text = (field, label, min, max) => body(field)
   .isString().withMessage(`${label} is required.`).bail()
   .trim()
-  .isLength({ min, max }).withMessage(`${label} must be ${min} to ${max} characters.`);
+  .isLength({ min, max }).withMessage(`${label} must be ${min} to ${max} characters.`).bail()
+  .matches(/^[^<>]*$/).withMessage(`${label} cannot contain the characters < or >.`);
 
 const deliveryValidation = [
   body('delivery').isObject().withMessage('Delivery details are required.'),
@@ -19,7 +20,8 @@ const deliveryValidation = [
     .optional({ checkFalsy: true })
     .isString().withMessage('Landmark must be text.').bail()
     .trim()
-    .isLength({ max: 80 }).withMessage('Landmark must be at most 80 characters.'),
+    .isLength({ max: 80 }).withMessage('Landmark must be at most 80 characters.').bail()
+    .matches(/^[^<>]*$/).withMessage('Landmark cannot contain the characters < or >.'),
   body('delivery.pincode')
     .isString().withMessage('Pincode is required.').bail()
     .trim()

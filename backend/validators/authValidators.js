@@ -4,7 +4,9 @@ const registerValidation = [
   body('name')
     .trim()
     .notEmpty().withMessage('Name is required.')
-    .isLength({ min: 2 }).withMessage('Name must be at least 2 characters.'),
+    .isLength({ min: 2 }).withMessage('Name must be at least 2 characters.')
+    .isLength({ max: 60 }).withMessage('Name must be at most 60 characters.')
+    .matches(/^[^<>]*$/).withMessage('Name cannot contain the characters < or >.'),
 
   body('email')
     .trim()
@@ -14,7 +16,7 @@ const registerValidation = [
 
   body('password')
     .notEmpty().withMessage('Password is required.')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters.')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters.')
 ];
 
 const loginValidation = [

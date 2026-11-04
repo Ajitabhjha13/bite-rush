@@ -64,11 +64,16 @@ function setFieldError(inputId, message) {
 
 function validateDelivery(d) {
   const errors = {};
+  const noTags = (v) => !/[<>]/.test(v);
   if (d.name.length < 2) errors.name = 'Enter the name of the person receiving the order.';
+  else if (!noTags(d.name)) errors.name = 'The name cannot contain the characters < or >.';
   if (!/^[6-9]\d{9}$/.test(d.phone)) errors.phone = 'Enter a valid 10-digit mobile number.';
   if (d.address_line.length < 5) errors.address_line = 'Enter your flat, building and street.';
+  else if (!noTags(d.address_line)) errors.address_line = 'The address cannot contain the characters < or >.';
   if (d.area.length < 2) errors.area = 'Enter your area.';
+  else if (!noTags(d.area)) errors.area = 'The area cannot contain the characters < or >.';
   if (d.landmark.length > 80) errors.landmark = 'Landmark must be at most 80 characters.';
+  else if (!noTags(d.landmark)) errors.landmark = 'The landmark cannot contain the characters < or >.';
   if (!/^\d{6}$/.test(d.pincode)) {
     errors.pincode = 'Enter a 6-digit pincode.';
   } else if (Number(d.pincode) < DELIVERY_PIN_MIN || Number(d.pincode) > DELIVERY_PIN_MAX) {
@@ -116,7 +121,7 @@ function renderCheckoutPanel() {
 
   itemsList.innerHTML = cart.map((item) => `
     <div class="d-flex justify-content-between py-2 border-bottom">
-      <span>${item.name} ${item.type === 'combo' ? '<span class="badge bg-warning text-dark"><i class="bi bi-box-seam"></i> Combo</span>' : ''} ${item.spice_level ? `<span class="badge bg-light text-dark border">${item.spice_level}</span>` : ''} <span class="text-muted">x${item.quantity}</span></span>
+      <span>${escapeHtml(item.name)} ${item.type === 'combo' ? '<span class="badge bg-warning text-dark"><i class="bi bi-box-seam"></i> Combo</span>' : ''} ${item.spice_level ? `<span class="badge bg-light text-dark border">${escapeHtml(item.spice_level)}</span>` : ''} <span class="text-muted">x${item.quantity}</span></span>
       <span class="fw-semibold">₹${item.price * item.quantity}</span>
     </div>
   `).join('');
@@ -316,7 +321,7 @@ async function confirmOnlinePayment(pending, delivery, resp) {
     });
   } catch (error) {
     // The payment may have gone through even though this call failed (the server also hears from Razorpay directly).
-    showError(`${error.message}. If money was deducted, your order will appear in the list below within a minute, or the amount will be refunded.`);
+    showError(`${escapeHtml(error.message)}. If money was deducted, your order will appear in the list below within a minute, or the amount will be refunded.`);
     resetPlaceButton();
     loadOrderHistory();
   }
@@ -524,7 +529,7 @@ async function loadOrderHistory() {
           <div class="mt-2 small text-muted">
             ${order.items.map((oi) => {
               const label = oi.combo ? `${oi.combo.name} (Combo)` : (oi.item ? oi.item.name : 'Item');
-              return `${label}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`;
+              return `${escapeHtml(label)}${oi.spice_level ? ` (${escapeHtml(oi.spice_level)})` : ''} x${oi.quantity}`;
             }).join(', ')}
           </div>
           ${order.delivery && order.delivery.address_line ? `
@@ -573,7 +578,7 @@ async function loadOrderHistory() {
     });
 
   } catch (error) {
-    container.innerHTML = `<p class="text-center text-danger py-4">${error.message}</p>`;
+    container.innerHTML = `<p class="text-center text-danger py-4">${escapeHtml(error.message)}</p>`;
   }
 }
 

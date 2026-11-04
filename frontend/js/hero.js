@@ -106,14 +106,14 @@ function renderHeroSearchSuggestions(query) {
     .slice(0, 4);
 
   if (matches.length === 0) {
-    suggestionsBox.innerHTML = `<div class="hero-search-suggestion-item text-muted">No dishes found for "${query}"</div>`;
+    suggestionsBox.innerHTML = `<div class="hero-search-suggestion-item text-muted">No dishes found for "${escapeHtml(query)}"</div>`;
     suggestionsBox.classList.remove('d-none');
     return;
   }
 
   suggestionsBox.innerHTML = matches.map((item) => `
-    <div class="hero-search-suggestion-item" data-name="${item.name}">
-      <i class="bi bi-search"></i> ${item.name}
+    <div class="hero-search-suggestion-item" data-name="${escapeHtml(item.name)}">
+      <i class="bi bi-search"></i> ${escapeHtml(item.name)}
       <span class="suggestion-price">₹${item.price}</span>
     </div>
   `).join('');
