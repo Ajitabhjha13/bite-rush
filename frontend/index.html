@@ -59,10 +59,9 @@
   <!-- Hero Section -->
   <header class="hero-section d-flex align-items-center">
 
-    <video class="hero-video d-none d-md-block" autoplay muted loop playsinline preload="auto"
-      poster="https://images.unsplash.com/photo-1600688640154-9619e002df30?auto=format&fit=crop&w=1900&q=85">
-      <source src="videos/hero-bg.mp4" type="video/mp4">
-    </video>
+    <!-- The video is started from js/hero.js, and only on larger screens, so phones never download it. -->
+    <video class="hero-video d-none d-md-block" id="heroVideo" data-src="videos/hero-bg.mp4" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"
+      poster="https://images.unsplash.com/photo-1600688640154-9619e002df30?auto=format&fit=crop&w=1900&q=85"></video>
     <div class="hero-overlay"></div>
 
     <div class="container text-center text-white py-5">

@@ -24,7 +24,21 @@ function cycleHeroWord() {
   }, 250);
 }
 
+// Background video: only for wide screens, not when the visitor asks for less motion or Data Saver is on.
+function startHeroVideo() {
+  const video = document.getElementById('heroVideo');
+  if (!video) return;
+  const wide = window.matchMedia('(min-width: 768px)').matches;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const saver = navigator.connection && navigator.connection.saveData;
+  if (!wide || calm || saver) return; // the poster image stays
+  video.src = video.dataset.src;
+  const p = video.play();
+  if (p && p.catch) p.catch(() => {}); // autoplay blocked: the poster stays
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  startHeroVideo();
   if (document.getElementById('rotateWord')) {
     setInterval(cycleHeroWord, 2200);
   }

@@ -67,7 +67,7 @@ function renderMenuItems(items, emptyMessage) {
   menuGrid.innerHTML = items.map((item) => `
     <div class="col-sm-6 col-lg-4 col-xl-3">
       <div class="card menu-card">
-        <img src="${escapeHtml(item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image')}" alt="${escapeHtml(item.name)}" data-item-id="${item._id}" class="menu-card-img-clickable" style="cursor:pointer;" onerror="this.onerror=null; this.src='https://placehold.co/300x180/f1f1f1/999999?text=No+Image';">
+        <img loading="lazy" decoding="async" src="${escapeHtml(item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image')}" alt="${escapeHtml(item.name)}" data-item-id="${item._id}" class="menu-card-img-clickable" style="cursor:pointer;" onerror="this.onerror=null; this.src='https://placehold.co/300x180/f1f1f1/999999?text=No+Image';">
         ${item.prep_time ? `<span class="delivery-time-badge"><i class="bi bi-clock"></i> ${item.prep_time}</span>` : ''}
         ${item.is_bestseller ? '<span class="bestseller-badge"><i class="bi bi-star-fill"></i> Bestseller</span>' : ''}
         <div class="card-body d-flex flex-column">
