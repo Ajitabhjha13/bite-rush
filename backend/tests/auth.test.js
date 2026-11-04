@@ -1,6 +1,7 @@
 const request = require('supertest');
 const app = require('../app');
 const db = require('./helpers');
+const User = require('../models/User');
 
 beforeAll(db.connect);
 afterEach(db.clearDb);
@@ -44,5 +45,47 @@ describe('Auth', () => {
     const { token } = await db.createUser();
     const res = await request(app).get('/api/orders/admin/all').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(403);
+  });
+});
+
+describe('Names and passwords are checked on the server', () => {
+  const body = { name: 'Ajitabh', email: 'safe@test.com', password: 'longenough1' };
+
+  test('a name with HTML characters is rejected', async () => {
+    for (const name of ['<img src=x onerror=alert(1)>', 'Aj<b>', '<svg/onload=1>']) {
+      const res = await request(app).post('/api/auth/register').send({ ...body, name });
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/< or >/);
+    }
+    expect(await User.countDocuments()).toBe(0);
+  });
+
+  test('ordinary names still work, including apostrophes and dots', async () => {
+    for (const [i, name] of ["D'Souza", 'Dr. A. K. Jha', 'Ajitabh Kumar Jha'].entries()) {
+      const res = await request(app).post('/api/auth/register').send({ ...body, name, email: `n${i}@test.com` });
+      expect(res.status).toBe(201);
+    }
+  });
+
+  test('a name over 60 characters is rejected', async () => {
+    const res = await request(app).post('/api/auth/register').send({ ...body, name: 'a'.repeat(61) });
+    expect(res.status).toBe(400);
+  });
+
+  test('password needs 8 characters', async () => {
+    const short = await request(app).post('/api/auth/register').send({ ...body, password: '1234567' });
+    expect(short.status).toBe(400);
+    expect(short.body.message).toMatch(/at least 8/);
+    const ok = await request(app).post('/api/auth/register').send({ ...body, password: '12345678' });
+    expect(ok.status).toBe(201);
+  });
+
+  test('an older account with a short password can still log in', async () => {
+    await User.collection.insertOne({
+      name: 'Old', email: 'old@test.com', role: 'customer', createdAt: new Date(), updatedAt: new Date(),
+      password: await require('bcryptjs').hash('abc123', 10)
+    });
+    const res = await request(app).post('/api/auth/login').send({ email: 'old@test.com', password: 'abc123' });
+    expect(res.status).toBe(200);
   });
 });

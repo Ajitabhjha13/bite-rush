@@ -24,7 +24,7 @@ async function loadCategories() {
     allCategories.forEach((cat) => {
       const li = document.createElement('li');
       li.className = 'nav-item';
-      li.innerHTML = `<button class="nav-link category-btn" data-category="${cat._id}">${cat.name}</button>`;
+      li.innerHTML = `<button class="nav-link category-btn" data-category="${cat._id}">${escapeHtml(cat.name)}</button>`;
       tabsContainer.appendChild(li);
     });
 
@@ -67,16 +67,16 @@ function renderMenuItems(items, emptyMessage) {
   menuGrid.innerHTML = items.map((item) => `
     <div class="col-sm-6 col-lg-4 col-xl-3">
       <div class="card menu-card">
-        <img src="${item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image'}" alt="${item.name}" data-item-id="${item._id}" class="menu-card-img-clickable" style="cursor:pointer;" onerror="this.onerror=null; this.src='https://placehold.co/300x180/f1f1f1/999999?text=No+Image';">
+        <img src="${escapeHtml(item.image_url || 'https://placehold.co/300x180/f1f1f1/999999?text=No+Image')}" alt="${escapeHtml(item.name)}" data-item-id="${item._id}" class="menu-card-img-clickable" style="cursor:pointer;" onerror="this.onerror=null; this.src='https://placehold.co/300x180/f1f1f1/999999?text=No+Image';">
         ${item.prep_time ? `<span class="delivery-time-badge"><i class="bi bi-clock"></i> ${item.prep_time}</span>` : ''}
         ${item.is_bestseller ? '<span class="bestseller-badge"><i class="bi bi-star-fill"></i> Bestseller</span>' : ''}
         <div class="card-body d-flex flex-column">
           <h5 class="card-title fw-semibold menu-card-img-clickable" data-item-id="${item._id}" style="cursor:pointer;">
             <span class="veg-indicator ${item.is_veg !== false ? 'veg' : 'non-veg'}" title="${item.is_veg !== false ? 'Vegetarian' : 'Non-Vegetarian'}"></span>
-            ${item.name}
+            ${escapeHtml(item.name)}
             ${item.has_spice_level ? '<i class="bi bi-fire text-danger ms-1" title="Spice level available" style="font-size:0.8rem;"></i>' : ''}
           </h5>
-          <p class="card-text text-muted small flex-grow-1">${item.description || ''}</p>
+          <p class="card-text text-muted small flex-grow-1">${escapeHtml(item.description || '')}</p>
           <div class="d-flex justify-content-between align-items-center mt-2">
             <span class="fw-bold fs-5">₹${item.price}</span>
             <div class="qty-control-wrapper" data-item-id="${item._id}">
@@ -147,9 +147,9 @@ function getQtyControlHtml(item) {
     return `
       <button class="btn btn-warning btn-sm fw-semibold add-to-cart-btn"
         data-id="${item._id}"
-        data-name="${item.name}"
+        data-name="${escapeHtml(item.name)}"
         data-price="${item.price}"
-        data-image="${item.image_url || ''}">
+        data-image="${escapeHtml(item.image_url || '')}">
         <i class="bi bi-plus-circle"></i> Add
       </button>
     `;
@@ -163,9 +163,9 @@ function getQtyControlHtml(item) {
       <span class="fw-semibold" style="min-width: 18px; text-align: center;">${qty}</span>
       <button class="btn btn-outline-warning btn-sm qty-btn qty-increase-btn"
         data-id="${item._id}"
-        data-name="${item.name}"
+        data-name="${escapeHtml(item.name)}"
         data-price="${item.price}"
-        data-image="${item.image_url || ''}"
+        data-image="${escapeHtml(item.image_url || '')}"
         aria-label="Increase quantity">
         <i class="bi bi-plus"></i>
       </button>
@@ -254,8 +254,8 @@ function updateOutletBanner(categoryId) {
     <div class="d-flex align-items-center gap-3 p-3">
       <div class="icon-circle-lg"><i class="bi ${info.icon}"></i></div>
       <div>
-        <h5 class="fw-bold mb-0">${info.outletName}</h5>
-        <p class="text-muted small mb-0">${info.tagline}</p>
+        <h5 class="fw-bold mb-0">${escapeHtml(info.outletName)}</h5>
+        <p class="text-muted small mb-0">${escapeHtml(info.tagline)}</p>
       </div>
     </div>
   `;

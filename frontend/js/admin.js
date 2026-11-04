@@ -6,6 +6,9 @@ let autoRefreshInterval;
 function checkAdminAccess() {
   const user = getCurrentUser();
 
+  const sidebar = document.querySelector('.admin-sidebar');
+  if (sidebar) sidebar.classList.toggle('d-none', !(user && user.role === 'admin')); // nothing of the admin layout for visitors
+
   if (!user || user.role !== 'admin') {
     document.getElementById('accessDenied').classList.remove('d-none');
     document.getElementById('adminContent').classList.add('d-none');
@@ -90,10 +93,10 @@ async function loadOrders(isInitialLoad = false) {
     tbody.innerHTML = orders.map((order) => `
       <tr>
         <td class="fw-semibold">#${order._id.slice(-6).toUpperCase()}</td>
-        <td>${order.user ? order.user.name : 'Unknown'}<br><span class="text-muted small">${order.user ? order.user.email : ''}</span></td>
+        <td>${escapeHtml(order.user ? order.user.name : 'Unknown')}<br><span class="text-muted small">${escapeHtml(order.user ? order.user.email : '')}</span></td>
         <td class="small">${order.items.map((oi) => {
           const label = oi.combo ? `${oi.combo.name} (Combo)` : (oi.item ? oi.item.name : 'Item');
-          return `${label}${oi.spice_level ? ` (${oi.spice_level})` : ''} x${oi.quantity}`;
+          return `${escapeHtml(label)}${oi.spice_level ? ` (${escapeHtml(oi.spice_level)})` : ''} x${oi.quantity}`;
         }).join(', ')}</td>
         <td class="small">${deliveryCell(order.delivery)}</td>
         <td class="fw-semibold">₹${order.total_amount}<br>${paymentBadge(order)}</td>
@@ -119,7 +122,7 @@ async function loadOrders(isInitialLoad = false) {
     });
 
   } catch (error) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${escapeHtml(error.message)}</td></tr>`;
   }
 }
 
@@ -191,7 +194,7 @@ async function loadCategoriesForForm() {
     allCategoriesAdmin = await res.json();
 
     const select = document.getElementById('itemCategory');
-    select.innerHTML = allCategoriesAdmin.map((cat) => `<option value="${cat._id}">${cat.name}</option>`).join('');
+    select.innerHTML = allCategoriesAdmin.map((cat) => `<option value="${cat._id}">${escapeHtml(cat.name)}</option>`).join('');
   } catch (error) {
     console.error('Failed to load categories:', error);
   }
@@ -229,13 +232,13 @@ async function loadMenuItemsAdmin() {
 
     tbody.innerHTML = items.map((item) => `
       <tr>
-        <td><img src="${item.image_url || 'https://placehold.co/50x50/f1f1f1/999999?text=%20'}" width="45" height="45" style="object-fit:cover; border-radius:6px;" onerror="this.onerror=null; this.src='https://placehold.co/50x50/f1f1f1/999999?text=%20';"></td>
+        <td><img src="${escapeHtml(item.image_url || 'https://placehold.co/50x50/f1f1f1/999999?text=%20')}" width="45" height="45" style="object-fit:cover; border-radius:6px;" onerror="this.onerror=null; this.src='https://placehold.co/50x50/f1f1f1/999999?text=%20';"></td>
         <td class="fw-semibold">
           <span class="veg-indicator ${item.is_veg !== false ? 'veg' : 'non-veg'}" title="${item.is_veg !== false ? 'Vegetarian' : 'Non-Vegetarian'}"></span>
-          ${item.name}
+          ${escapeHtml(item.name)}
           ${item.is_bestseller ? '<span class="badge bg-warning text-dark ms-1">Bestseller</span>' : ''}
         </td>
-        <td>${item.category ? item.category.name : '-'}</td>
+        <td>${escapeHtml(item.category ? item.category.name : '-')}</td>
         <td>₹${item.price}</td>
         <td>${item.is_available ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
         <td>
@@ -256,7 +259,7 @@ async function loadMenuItemsAdmin() {
     });
 
   } catch (error) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${escapeHtml(error.message)}</td></tr>`;
   }
 }
 
@@ -388,8 +391,8 @@ async function loadCombosAdmin() {
 
     tbody.innerHTML = combos.map((combo) => `
       <tr>
-        <td><img src="${combo.image_url || 'https://placehold.co/50x50/f1f1f1/999999?text=%20'}" width="45" height="45" style="object-fit:cover; border-radius:6px;" onerror="this.onerror=null; this.src='https://placehold.co/50x50/f1f1f1/999999?text=%20';"></td>
-        <td class="fw-semibold">${combo.name}</td>
+        <td><img src="${escapeHtml(combo.image_url || 'https://placehold.co/50x50/f1f1f1/999999?text=%20')}" width="45" height="45" style="object-fit:cover; border-radius:6px;" onerror="this.onerror=null; this.src='https://placehold.co/50x50/f1f1f1/999999?text=%20';"></td>
+        <td class="fw-semibold">${escapeHtml(combo.name)}</td>
         <td class="small text-muted">${combo.items.map((i) => i.name).join(', ')}</td>
         <td>₹${combo.combo_price} <span class="text-muted small text-decoration-line-through">₹${combo.original_price}</span></td>
         <td>${combo.is_available ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
@@ -409,7 +412,7 @@ async function loadCombosAdmin() {
     });
 
   } catch (error) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${escapeHtml(error.message)}</td></tr>`;
   }
 }
 
@@ -425,7 +428,7 @@ async function loadMenuItemsChecklist(selectedIds = []) {
     container.innerHTML = allMenuItemsForCombo.map((item) => `
       <div class="form-check">
         <input class="form-check-input combo-item-checkbox" type="checkbox" value="${item._id}" data-price="${item.price}" id="comboItem-${item._id}" ${selectedIds.includes(item._id) ? 'checked' : ''}>
-        <label class="form-check-label small" for="comboItem-${item._id}">${item.name} (₹${item.price})</label>
+        <label class="form-check-label small" for="comboItem-${item._id}">${escapeHtml(item.name)} (₹${item.price})</label>
       </div>
     `).join('');
 
@@ -604,10 +607,6 @@ function shiftDate(dateStr, days) {
 function slotLabel(slot) {
   const [h, m] = slot.split(':').map(Number);
   return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
-}
-
-function escapeHtml(v) {
-  return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 async function adminApi(path, options = {}) {

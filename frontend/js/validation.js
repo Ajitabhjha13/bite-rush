@@ -60,6 +60,10 @@ function validateNameField(input) {
     setFieldError(input, 'Name must be at least 2 characters.');
     return false;
   }
+  if (/[<>]/.test(value)) {
+    setFieldError(input, 'Name cannot contain the characters < or >.');
+    return false;
+  }
   setFieldValid(input);
   return true;
 }

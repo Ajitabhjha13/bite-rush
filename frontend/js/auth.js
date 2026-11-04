@@ -41,7 +41,7 @@ function updateAuthNav() {
     authNavItem.innerHTML = `
       <div class="dropdown">
         <button class="btn btn-outline-warning fw-semibold dropdown-toggle" type="button" data-bs-toggle="dropdown">
-          <i class="bi bi-person-circle"></i> ${user.name.split(' ')[0]}
+          <i class="bi bi-person-circle"></i> ${escapeHtml(user.name.split(' ')[0])}
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
           ${user.role === 'admin' ? '<li><a class="dropdown-item" href="admin.html"><i class="bi bi-speedometer2"></i> Admin Dashboard</a></li>' : ''}
@@ -126,7 +126,7 @@ function setupRegisterForm() {
 
   attachLiveValidation(nameInput, validateNameField);
   attachLiveValidation(emailInput, validateEmailField);
-  attachLiveValidation(passwordInput, (input) => validatePasswordField(input, 6));
+  attachLiveValidation(passwordInput, (input) => validatePasswordField(input, 8));
   attachPasswordToggle(passwordInput);
 
   form.addEventListener('submit', async (e) => {
@@ -134,7 +134,7 @@ function setupRegisterForm() {
 
     const isNameValid = validateNameField(nameInput);
     const isEmailValid = validateEmailField(emailInput);
-    const isPasswordValid = validatePasswordField(passwordInput, 6);
+    const isPasswordValid = validatePasswordField(passwordInput, 8);
     if (!isNameValid || !isEmailValid || !isPasswordValid) return;
 
     const name = nameInput.value.trim();

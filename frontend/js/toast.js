@@ -50,7 +50,11 @@ function showToast(message, type = 'info') {
     transform: translateX(20px);
     transition: opacity 0.25s ease, transform 0.25s ease;
   `;
-  toast.innerHTML = `<i class="bi ${style.icon}"></i><span>${message}</span>`;
+  const icon = document.createElement('i');
+  icon.className = `bi ${style.icon}`;
+  const text = document.createElement('span');
+  text.textContent = message; // text only, so a dish or user name can never run as code
+  toast.append(icon, text);
 
   container.appendChild(toast);
 

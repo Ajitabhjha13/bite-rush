@@ -107,9 +107,9 @@ function renderCart() {
 
   cartItemsList.innerHTML = cart.map((item) => `
     <div class="cart-item-row d-flex align-items-center">
-      <img src="${item.image_url || 'https://placehold.co/60x60/f1f1f1/999999?text=%20'}" alt="${item.name}" width="50" height="50" class="rounded me-2" style="object-fit:cover;" onerror="this.onerror=null; this.src='https://placehold.co/60x60/f1f1f1/999999?text=%20';">
+      <img src="${escapeHtml(item.image_url || 'https://placehold.co/60x60/f1f1f1/999999?text=%20')}" alt="${escapeHtml(item.name)}" width="50" height="50" class="rounded me-2" style="object-fit:cover;" onerror="this.onerror=null; this.src='https://placehold.co/60x60/f1f1f1/999999?text=%20';">
       <div class="flex-grow-1">
-        <div class="fw-semibold small">${item.name} ${item.type === 'combo' ? '<span class="badge bg-warning text-dark ms-1"><i class="bi bi-box-seam"></i> Combo</span>' : ''} ${item.spice_level ? `<span class="badge bg-light text-dark border ms-1">${item.spice_level}</span>` : ''}</div>
+        <div class="fw-semibold small">${escapeHtml(item.name)} ${item.type === 'combo' ? '<span class="badge bg-warning text-dark ms-1"><i class="bi bi-box-seam"></i> Combo</span>' : ''} ${item.spice_level ? `<span class="badge bg-light text-dark border ms-1">${escapeHtml(item.spice_level)}</span>` : ''}</div>
         <div class="text-muted small">₹${item.price} x ${item.quantity}</div>
       </div>
       <div class="d-flex align-items-center gap-1">

@@ -173,3 +173,20 @@ describe('Delivery details on orders', () => {
     expect(all.body.items.find((o) => o._id === placed.body.order_id).delivery.phone).toBe('9876543210');
   });
 });
+
+describe('Delivery text cannot carry HTML', () => {
+  test.each([
+    ['name', { name: '<img src=x onerror=alert(1)>' }],
+    ['address', { address_line: '12 <script>alert(1)</script> Road' }],
+    ['area', { area: 'Alka<puri' }],
+    ['landmark', { landmark: '<b>near</b> temple' }]
+  ])('a %s with < or > is rejected', async (_l, override) => {
+    const { token } = await db.createUser();
+    const item = await makeItem(100);
+    const res = await request(app).post('/api/orders').set('Authorization', `Bearer ${token}`)
+      .send({ delivery: { ...delivery, ...override }, cart_items: [{ type: 'item', item_id: item._id, quantity: 1 }] });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/< or >/);
+    expect(await Order.countDocuments()).toBe(0);
+  });
+});
