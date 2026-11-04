@@ -47,7 +47,8 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-grow-1 p-4">
+    <main id="main" class="flex-grow-1 p-4">
+      <h1 class="visually-hidden">Admin dashboard</h1>
 
       <!-- Access Denied Message (shown if not admin) -->
       <div id="accessDenied" class="d-none text-center py-5">
@@ -174,7 +175,7 @@
         </div>
 
       </div>
-    </div>
+    </main>
   </div>
 
   <!-- Add/Edit Menu Item Modal -->
@@ -183,7 +184,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="menuModalTitle">Add Menu Item</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form id="menuItemForm">
@@ -245,7 +246,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="comboModalTitle">Add Combo</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form id="comboForm">

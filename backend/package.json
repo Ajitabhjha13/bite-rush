@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Bite Rush API: food ordering, table booking and payments (Express, MongoDB, Razorpay test mode)",
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
@@ -9,8 +9,8 @@
     "test": "jest --runInBand"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Ajitabh Kumar Jha",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin
+Disallow: /admin.html
+
+Sitemap: https://bite-rush-frontend.onrender.com/sitemap.xml

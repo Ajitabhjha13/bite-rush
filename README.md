@@ -160,7 +160,7 @@ Behind Render and Cloudflare, `req.ip` can be a proxy. The limiter prefers the e
 Order lists fetch their line items with one `$in` query for the whole page instead of one query per order, and page sizes are capped on the server no matter what the client asks for.
 
 **Tests never touch real services.**
-The suite (157 tests) runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
+The suite (179 tests) runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
 
 ---
 
@@ -346,3 +346,7 @@ CSE · Parul University · Vadodara, Gujarat
 <p align="center">
   <a href="https://github.com/Ajitabhjha13"><img src="https://img.shields.io/badge/GitHub-Ajitabhjha13-181717?style=flat-square&logo=github&logoColor=white"></a>
 </p>
+
+## License
+
+MIT. See [LICENSE](LICENSE).

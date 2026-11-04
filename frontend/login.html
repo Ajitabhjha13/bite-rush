@@ -40,7 +40,7 @@
     </div>
 
     <!-- Right: Form Panel -->
-    <div class="auth-form-panel">
+    <main id="main" class="auth-form-panel">
       <div class="auth-form-wrapper">
 
         <!-- Logo shown only on mobile, since branding panel is hidden there -->
@@ -56,12 +56,12 @@
 
         <form id="loginForm" novalidate>
           <div class="mb-3">
-            <label class="form-label">Email address</label>
+            <label class="form-label" for="loginEmail">Email address</label>
             <input type="email" class="form-control" id="loginEmail" required placeholder="you@example.com">
             <div class="invalid-feedback"></div>
           </div>
           <div class="mb-3">
-            <label class="form-label">Password</label>
+            <label class="form-label" for="loginPassword">Password</label>
             <input type="password" class="form-control" id="loginPassword" required placeholder="••••••••">
             <div class="invalid-feedback"></div>
           </div>
@@ -75,7 +75,7 @@
           Don't have an account? <a href="register.html" class="text-decoration-none fw-semibold" style="color:var(--color-gold-dark);">Register here</a>
         </p>
       </div>
-    </div>
+    </main>
 
   </div>
 

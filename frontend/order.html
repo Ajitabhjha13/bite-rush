@@ -29,7 +29,7 @@
       <a class="navbar-brand fw-bold fs-3 d-flex align-items-center gap-2" href="index.html">
         <img src="images/logo.png" alt="Bite Rush" class="navbar-logo"> Bite Rush
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-label="Open the menu">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navMenu">
@@ -42,7 +42,7 @@
           <li class="nav-item">
             <a class="nav-link position-relative" href="menu.html#cart">
               <i class="bi bi-cart3 fs-5"></i>
-              <span id="cartCount" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-100 translate-middle" style="font-size:0.65rem;">0</span>
+              <span id="cartCount" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-100 translate-middle" style="font-size:0.75rem;">0</span>
             </a>
           </li>
           <li class="nav-item" id="authNavItem">
@@ -53,7 +53,10 @@
     </div>
   </nav>
 
+  <main id="main">
+
   <div class="container py-5">
+    <h1 class="visually-hidden">My Orders</h1>
 
     <!-- Checkout Panel (shown only if cart has items and user is logged in) -->
     <div id="checkoutPanel" class="d-none mb-5">
@@ -184,6 +187,8 @@
       </div>
     </div>
   </div>
+
+  </main>
 
   <footer class="bg-dark text-white py-4" data-bs-theme="dark">
     <div class="container text-center small">
