@@ -14,7 +14,7 @@ const OUTLET_INFO = {
     outletName: 'Bite Rush Kitchen',
     tagline: 'Hearty mains, cooked fresh daily.',
     icon: 'bi-basket2-fill',
-    image: 'images/outlets/kitchen.jpg'
+    image: 'https://images.unsplash.com/photo-1753727471014-efe38840c7c7?auto=format&fit=crop&w=800&q=80'
   },
   beverages: {
     outletName: 'Bite Rush Sips',
