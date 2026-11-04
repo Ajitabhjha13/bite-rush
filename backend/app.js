@@ -46,4 +46,18 @@ app.use('/api/combos', comboRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/tables', tableRoutes);
 
+// Anything that matched no route: answer in JSON like every other endpoint (not an HTML error page).
+app.use('/api', (req, res) => res.status(404).json({ message: 'Not found.' }));
+
+// Malformed JSON, oversized bodies and other request errors: JSON too, with the right status and no stack trace.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 500;
+  if (status >= 500) console.error('[error]', err.message);
+  const message = err.type === 'entity.parse.failed' ? 'The request body is not valid JSON.'
+    : err.type === 'entity.too.large' ? 'The request body is too large.'
+    : status >= 500 ? 'Server error' : (err.message || 'Bad request');
+  res.status(status).json({ message });
+});
+
 module.exports = app;

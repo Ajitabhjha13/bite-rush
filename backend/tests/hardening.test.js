@@ -143,3 +143,29 @@ describe('rate limiting', () => {
     for (let i = 0; i < 15; i++) expect((await request(app).post('/api/payments/webhook').send({})).status).not.toBe(429);
   });
 });
+
+describe('Errors are JSON, never an HTML page', () => {
+  const request = require('supertest');
+  const app = require('../app');
+
+  test('an unknown API route gives a JSON 404', async () => {
+    const res = await request(app).get('/api/does-not-exist');
+    expect(res.status).toBe(404);
+    expect(res.headers['content-type']).toMatch(/json/);
+    expect(res.body.message).toBe('Not found.');
+  });
+
+  test('a malformed JSON body gives a JSON 400 with no stack trace', async () => {
+    const res = await request(app).post('/api/auth/login').set('Content-Type', 'application/json').send('{bad');
+    expect(res.status).toBe(400);
+    expect(res.headers['content-type']).toMatch(/json/);
+    expect(res.body.message).toMatch(/not valid JSON/);
+    expect(JSON.stringify(res.body)).not.toMatch(/at .*\.js/);
+  });
+
+  test('an oversized body gives a JSON 413', async () => {
+    const res = await request(app).post('/api/auth/login').send({ email: 'a@b.co', password: 'x'.repeat(200000) });
+    expect(res.status).toBe(413);
+    expect(res.body.message).toMatch(/too large/);
+  });
+});
