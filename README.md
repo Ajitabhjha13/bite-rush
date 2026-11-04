@@ -3,8 +3,9 @@
 </p>
 
 <p align="center">
-  <b>A full-stack food ordering and table booking app, deployed on Render. Browse a menu, build a cart,<br>
-  check out with server-validated pricing and a Vadodara delivery address, and book a table with a test-mode deposit.</b>
+  <b>A full-stack food ordering and table booking app, deployed on Render.<br>
+  Order food with online payment and live status updates, book a table with a deposit, and manage it all from an admin dashboard.<br>
+  Every price, payment and refund is decided on the server.</b>
 </p>
 
 <p align="center">
@@ -36,9 +37,22 @@
 
 ---
 
+## Try it in two minutes
+
+1. Open the **[live demo](https://bite-rush-frontend.onrender.com)**. The first request can take 30 to 50 seconds while the free server wakes up.
+2. **Register** an account, add a few dishes from the **menu** and open the cart.
+3. At checkout enter a Vadodara address (any pincode from 390001 to 390025) and choose **Pay online**. In the Razorpay window use the test card `4111 1111 1111 1111`, any future expiry and any CVV, or pick netbanking and press **Success**. No real money moves.
+4. After paying you get a **30 second window for a full refund**. Keep **My Orders** open: when the kitchen changes the status, the page updates by itself.
+5. Open **Reserve** to hold a table for 2 minutes and pay a ₹100 test deposit.
+6. Forgot a password? **Forgot password?** on the login page sends a real reset email.
+
+The admin dashboard is private. Screenshots of it are below.
+
+---
+
 ## Contents
 
-[Why I built it](#why-i-built-it) · [Highlights](#highlights) · [Demo](#demo) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Engineering decisions](#engineering-decisions) · [Security](#security) · [Tech Stack](#tech-stack) · [Project Structure](#project-structure) · [Getting Started](#getting-started-local-development) · [API Reference](#api-reference) · [Roadmap](#roadmap)
+[Try it](#try-it-in-two-minutes) · [Why I built it](#why-i-built-it) · [Highlights](#highlights) · [Demo](#demo) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Engineering decisions](#engineering-decisions) · [Security](#security) · [Tech Stack](#tech-stack) · [Project Structure](#project-structure) · [Getting Started](#getting-started-local-development) · [API Reference](#api-reference) · [Roadmap](#roadmap)
 
 ---
 
@@ -59,33 +73,92 @@ I kept iterating long after the minimum feature set was done: item customization
 | **Per-dish customization**<br>Items can offer a **spice level picker** (Mild / Medium / Hot) in a detail modal. It is opt-in per dish and validated on the server, so only dishes that support it can carry a spice choice into an order. | **Combo meals**<br>Admin-built bundles of existing menu items at a discounted price, with the **savings computed** from the current prices of the items inside, never a stale, hand-typed number. |
 | **Order lifecycle**<br>Received, Preparing, Ready, Delivered, with a status tracker on the My Orders page. Customers can **cancel** their own order while it is still queued and **reorder** a past order in one click. | **Server-validated pricing**<br>Every order total is recalculated from the database at checkout. The price a client sends is never trusted, which closes the most common e-commerce tampering vector. |
 | **Table booking with deposits**<br>Day-ahead reservations (5 slots, 10 tables, a separate online-only table pool). A seat is **held for 2 minutes** while the customer pays a ₹100 deposit through **Razorpay (test mode)**. Double-booking is prevented **in the database** with partial unique indexes, and a **tiered refund** (100% / 50% / 0%) applies on cancellation. | **Admin dashboard**<br>A protected dashboard for menu management, incoming orders with delivery details (updated live), combo management, and a **reservations grid**: table by time slot for any date, with Seated / No-show check-in, restaurant-side cancel with a full refund, a retry for failed refunds, and per-table online / walk-in switches. |
-| **Input validation**<br>Every write endpoint runs through `express-validator` on the server. Registration, login, menu changes, delivery details and bookings all reject malformed input before it reaches the database. | **Legal pages**<br>Privacy Policy and Terms pages written to match what the app actually stores, with a clear demo disclaimer. |
+| **Live order updates**<br>My Orders and the admin dashboard update the moment a status changes or a new order arrives, over **server-sent events**. The stream carries only an order id, and the browser fetches the details through the normal authenticated API, so nothing private travels on it. | **Password reset by email**<br>A single-use link that expires in 30 minutes, sent through Brevo's HTTP API. Only a hash of the token is stored, an unknown email gets the same answer as a known one, and resetting signs out every other device. |
+| **Input validation**<br>Every write endpoint runs through `express-validator` on the server. Registration, login, menu changes, delivery details and bookings all reject malformed input before it reaches the database. | **Fast and accessible**<br>The hero video went from 12 MB to 1.3 MB and only plays on larger screens without Data Saver. Menu photos are cropped and lazy loaded. Forms have linked labels, there is a skip link, and tap targets are at least 40 px on phones. |
+| **Safe by default**<br>User text is escaped before it is shown (a stored XSS bug found in an audit was fixed and covered by tests), JSON error responses everywhere, and rate limits on login, reset and booking endpoints. | **Legal pages**<br>Privacy Policy and Terms pages written to match what the app actually stores, with a clear demo disclaimer. |
 
 ---
 
 ## Demo
 
-<p align="center"><img src="docs/demo.gif" alt="Bite Rush demo: booking a table, then the admin reservations grid and orders" width="100%"></p>
-<p align="center"><sub>Recorded on the live site in Razorpay <b>test mode</b> (no real money moves). Account details are masked.</sub></p>
+<p align="center"><img src="docs/demo.gif" alt="Bite Rush demo: paying for an order, seeing it update live, booking a table, then the admin side" width="100%"></p>
+<p align="center"><sub>One walkthrough, ten steps: cart, checkout, test payment, refund window, live order status, table booking, admin orders, admin reservations. Razorpay <b>test mode</b>, demo data only.</sub></p>
 
 ---
 
 ## Screenshots
 
-| Menu: search, sort, categories, prep time, spice and veg markers | Combo meals: "Save ₹X" computed from current prices |
-|---|---|
-| ![Menu page](docs/screenshots/menu.png) | ![Combo meals](docs/screenshots/combo-meals.png) |
+All screenshots show demo customers and test payments. Nothing here is a real order.
 
-| Cart: regular items, a combo and a spice level | Order history: status tracker and one-click reorder |
-|---|---|
-| ![Cart with combo](docs/screenshots/cart.png) | ![Order tracking](docs/screenshots/order-tracking.png) |
+### Browse and order
 
-| Admin: incoming orders (live) | Admin: menu management |
+| Home | Outlets |
 |---|---|
-| ![Admin orders](docs/screenshots/admin-orders.png) | ![Admin menu management](docs/screenshots/admin-menu.png) |
+| ![Home page](docs/screenshots/home.png) | ![Outlets page](docs/screenshots/outlets.png) |
 
-<p align="center"><b>Mobile</b>: the same flow on a phone, covering home, menu, cart and order tracking</p>
-<p align="center"><img src="docs/screenshots/mobile.png" alt="Bite Rush on mobile" width="100%"></p>
+| Menu: search, sort, categories, prep time, spice and veg markers | Dish detail: spice level picker for dishes that support it |
+|---|---|
+| ![Menu page](docs/screenshots/menu.png) | ![Dish detail with spice level](docs/screenshots/menu-detail.png) |
+
+| Combo meals: the saving is computed from current prices | Cart: regular items, a combo and a spice level |
+|---|---|
+| ![Combo meals](docs/screenshots/combo-meals.png) | ![Cart with combo](docs/screenshots/cart.png) |
+
+### Payment
+
+| Checkout: delivery details, Vadodara pincode check, Pay online or cash on delivery |
+|---|
+| ![Checkout with delivery details and payment choice](docs/screenshots/checkout.png) |
+
+| After paying: 30 seconds to cancel for a full refund | My Orders: status changes appear live, no refresh needed |
+|---|---|
+| ![Order confirmation with refund countdown](docs/screenshots/order-confirmation.png) | ![My Orders updating live](docs/screenshots/my-orders-live.png) |
+
+| Order history: status tracker, reorder, cancelled orders show the refund |
+|---|
+| ![Order history with tracker](docs/screenshots/order-tracking.png) |
+
+### Table booking
+
+| Pick a day, time, party size and a free table | A table is held for 2 minutes while the deposit is paid |
+|---|---|
+| ![Booking: choose a slot](docs/screenshots/reserve-select.png) | ![Table hold with countdown](docs/screenshots/reserve-hold.png) |
+
+| Booking confirmed | My bookings |
+|---|---|
+| ![Booking confirmed](docs/screenshots/reserve-confirmed.png) | ![My bookings](docs/screenshots/my-bookings.png) |
+
+| Cancelling shows the refund you will get before you confirm |
+|---|
+| ![Cancel booking with refund preview](docs/screenshots/reserve-cancel.png) |
+
+### Admin
+
+| Orders: delivery details, payment state and refunds | Reservations: tables by time slot |
+|---|---|
+| ![Admin orders](docs/screenshots/admin-orders.png) | ![Admin reservations grid](docs/screenshots/admin-reservations.png) |
+
+| Reservation detail | Menu management |
+|---|---|
+| ![Admin reservation detail](docs/screenshots/admin-reservation-detail.png) | ![Admin menu management](docs/screenshots/admin-menu.png) |
+
+| Combo management |
+|---|
+| ![Admin combo management](docs/screenshots/admin-combos.png) |
+
+### Accounts
+
+| Login, with a Forgot password link |
+|---|
+| ![Login page](docs/screenshots/login.png) |
+
+Password reset: request a link, receive the email, choose a new password.
+
+<p align="center"><img src="docs/screenshots/password-reset.png" alt="Password reset: request a link, receive the email, choose a new password" width="100%"></p>
+
+### Mobile
+
+<p align="center"><img src="docs/screenshots/mobile.png" alt="Bite Rush on a phone: menu, cart, checkout, orders and booking" width="100%"></p>
 
 ---
 
@@ -99,7 +172,7 @@ Bite Rush uses a decoupled 3-tier architecture: a static frontend, a stateless R
 
 ```
 frontend/            Static HTML/CSS/JS client (Render Static Site)
-  index, menu, outlets, reserve, order, login, register, admin, privacy, terms (.html)
+  index, menu, outlets, reserve, order, login, register, forgot-password, reset-password, admin, privacy, terms (.html)
   css/style.css      Design tokens and page styling
   js/                One concern per file (cart, auth, menu, order, reserve, admin, pager, ...)
 
@@ -159,6 +232,12 @@ Behind Render and Cloudflare, `req.ip` can be a proxy. The limiter prefers the e
 **Lists are paginated on the server, without N+1 queries.**
 Order lists fetch their line items with one `$in` query for the whole page instead of one query per order, and page sizes are capped on the server no matter what the client asks for.
 
+**Live updates send a nudge, not data.**
+Order changes reach the browser over server-sent events. `EventSource` cannot send an `Authorization` header, so the browser first asks for a one-time ticket (valid 60 seconds), then opens the stream with it. Each event carries only an order id and a kind, and the page refetches the real data through the authenticated API. That keeps private details off the stream, limits a stream to 5 per user, and lets the client reconnect with a fresh ticket if the connection drops.
+
+**A password reset cannot be used twice, or to find out who has an account.**
+The token is 32 random bytes and only its SHA-256 is stored. Redeeming it is one atomic update (`used_at` from null to now, only if unexpired), so two clicks cannot both succeed. Asking for a reset returns the same reply and does the same work for known and unknown emails, and the email is sent after the response. A successful reset stamps `password_changed_at`, and the auth middleware rejects any login token issued before that moment. Email goes through Brevo's HTTP API because Render's free plan blocks SMTP.
+
 **Tests never touch real services.**
 The suite (199 tests) runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
 
@@ -205,18 +284,18 @@ bite-rush/
 ├── backend/
 │   ├── config/           # db, booking, delivery, limits
 │   ├── controllers/      # auth, category, menu, combo, order, booking, adminBooking, payment
-│   ├── models/           # User, Category, MenuItem, Combo, Order, OrderItem, Table, Reservation, WebhookEvent
-│   ├── services/         # booking, adminBooking, payment
+│   ├── models/           # User, Category, MenuItem, Combo, Order, OrderItem, Table, Reservation, WebhookEvent, PasswordReset
+│   ├── services/         # booking, adminBooking, payment, orderPayment, orderEvents, passwordReset, mailer, stuckRefunds
 │   ├── routes/           # one file per module
 │   ├── middleware/       # authMiddleware, rateLimiters, validate
 │   ├── validators/       # one file per module
 │   ├── tests/            # Jest suites (199 tests)
 │   └── server.js
 ├── frontend/
-│   ├── *.html            # index, menu, outlets, reserve, order, admin, login, register, privacy, terms
+│   ├── *.html            # index, menu, outlets, reserve, order, admin, login, register, forgot/reset password, privacy, terms
 │   ├── images/           # logo, favicons, social preview, menu/ and outlets/ photos
 │   ├── css/style.css
-│   └── js/               # config, auth, cart, menu, order, reserve, admin, pager, ...
+│   └── js/               # config, auth, cart, menu, order, reserve, admin, live, password-reset, pager, ...
 ├── .github/workflows/    # CI
 └── docs/                 # README images (banner, screenshots, diagrams, demo)
 ```
@@ -340,12 +419,6 @@ Paginated list endpoints return `{ items, total, page, limit, pages }`. Over-lim
 
 ---
 
-## License
-
-This project is a portfolio project built during the B.Tech CSE program at Parul University.
-
----
-
 <p align="center">
 <b>Built by <a href="https://github.com/Ajitabhjha13">Ajitabh Kumar Jha</a></b><br>
 CSE · Parul University · Vadodara, Gujarat
@@ -355,6 +428,8 @@ CSE · Parul University · Vadodara, Gujarat
   <a href="https://github.com/Ajitabhjha13"><img src="https://img.shields.io/badge/GitHub-Ajitabhjha13-181717?style=flat-square&logo=github&logoColor=white"></a>
 </p>
 
+---
+
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Built as a portfolio project during the B.Tech CSE program at Parul University.
