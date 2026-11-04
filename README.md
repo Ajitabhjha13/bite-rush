@@ -81,51 +81,84 @@ I kept iterating long after the minimum feature set was done: item customization
 
 ## Demo
 
-<p align="center"><img src="docs/demo.gif" alt="Bite Rush demo: booking a table, then the admin reservations grid and orders" width="100%"></p>
-<p align="center"><sub>Recorded on the live site in Razorpay <b>test mode</b> (no real money moves). Account details are masked.</sub></p>
+<p align="center"><img src="docs/demo.gif" alt="Bite Rush demo: paying for an order, seeing it update live, booking a table, then the admin side" width="100%"></p>
+<p align="center"><sub>One walkthrough, ten steps: cart, checkout, test payment, refund window, live order status, table booking, admin orders, admin reservations. Razorpay <b>test mode</b>, demo data only.</sub></p>
 
 ---
 
 ## Screenshots
 
-| Menu: search, sort, categories, prep time, spice and veg markers | Combo meals: "Save ₹X" computed from current prices |
+All screenshots show demo customers and test payments. Nothing here is a real order.
+
+### Browse and order
+
+| Home | Outlets |
 |---|---|
-| ![Menu page](docs/screenshots/menu.png) | ![Combo meals](docs/screenshots/combo-meals.png) |
+| ![Home page](docs/screenshots/home.png) | ![Outlets page](docs/screenshots/outlets.png) |
 
-| Cart: regular items, a combo and a spice level | Order history: status tracker and one-click reorder |
+| Menu: search, sort, categories, prep time, spice and veg markers | Dish detail: spice level picker for dishes that support it |
 |---|---|
-| ![Cart with combo](docs/screenshots/cart.png) | ![Order tracking](docs/screenshots/order-tracking.png) |
+| ![Menu page](docs/screenshots/menu.png) | ![Dish detail with spice level](docs/screenshots/menu-detail.png) |
 
-| Admin: menu management |
-|---|
-| ![Admin menu management](docs/screenshots/admin-menu.png) |
+| Combo meals: the saving is computed from current prices | Cart: regular items, a combo and a spice level |
+|---|---|
+| ![Combo meals](docs/screenshots/combo-meals.png) | ![Cart with combo](docs/screenshots/cart.png) |
 
-### Ordering and payment
+### Payment
 
-| Checkout: delivery details, Vadodara pincode check and Pay online or cash on delivery |
+| Checkout: delivery details, Vadodara pincode check, Pay online or cash on delivery |
 |---|
 | ![Checkout with delivery details and payment choice](docs/screenshots/checkout.png) |
 
-| After paying: 30 seconds to cancel for a full refund | My Orders: status changes appear live, refunds are itemised |
+| After paying: 30 seconds to cancel for a full refund | My Orders: status changes appear live, no refresh needed |
 |---|---|
 | ![Order confirmation with refund countdown](docs/screenshots/order-confirmation.png) | ![My Orders updating live](docs/screenshots/my-orders-live.png) |
 
-### Admin and bookings
-
-| Admin: delivery details, payment state and refunds per order | Admin: reservations grid, table by time slot |
-|---|---|
-| ![Admin orders with delivery and payment](docs/screenshots/admin-orders.png) | ![Admin reservations grid](docs/screenshots/admin-reservations.png) |
-
-| A table is held for 2 minutes while the deposit is paid |
+| Order history: status tracker, reorder, cancelled orders show the refund |
 |---|
-| ![Table hold with countdown](docs/screenshots/reserve-hold.png) |
+| ![Order history with tracker](docs/screenshots/order-tracking.png) |
 
-### Password reset
+### Table booking
+
+| Pick a day, time, party size and a free table | A table is held for 2 minutes while the deposit is paid |
+|---|---|
+| ![Booking: choose a slot](docs/screenshots/reserve-select.png) | ![Table hold with countdown](docs/screenshots/reserve-hold.png) |
+
+| Booking confirmed | My bookings |
+|---|---|
+| ![Booking confirmed](docs/screenshots/reserve-confirmed.png) | ![My bookings](docs/screenshots/my-bookings.png) |
+
+| Cancelling shows the refund you will get before you confirm |
+|---|
+| ![Cancel booking with refund preview](docs/screenshots/reserve-cancel.png) |
+
+### Admin
+
+| Orders: delivery details, payment state and refunds | Reservations: tables by time slot |
+|---|---|
+| ![Admin orders](docs/screenshots/admin-orders.png) | ![Admin reservations grid](docs/screenshots/admin-reservations.png) |
+
+| Reservation detail | Menu management |
+|---|---|
+| ![Admin reservation detail](docs/screenshots/admin-reservation-detail.png) | ![Admin menu management](docs/screenshots/admin-menu.png) |
+
+| Combo management |
+|---|
+| ![Admin combo management](docs/screenshots/admin-combos.png) |
+
+### Accounts
+
+| Login, with a Forgot password link |
+|---|
+| ![Login page](docs/screenshots/login.png) |
+
+Password reset: request a link, receive the email, choose a new password.
 
 <p align="center"><img src="docs/screenshots/password-reset.png" alt="Password reset: request a link, receive the email, choose a new password" width="100%"></p>
 
-<p align="center"><b>Mobile</b>: the same flow on a phone, covering home, menu, cart and order tracking</p>
-<p align="center"><img src="docs/screenshots/mobile.png" alt="Bite Rush on mobile" width="100%"></p>
+### Mobile
+
+<p align="center"><img src="docs/screenshots/mobile.png" alt="Bite Rush on a phone: menu, cart, checkout, orders and booking" width="100%"></p>
 
 ---
 
