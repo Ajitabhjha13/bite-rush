@@ -55,11 +55,12 @@
       <h2 class="h4 mt-4">3. Why we use it</h2>
       <ul>
         <li>To create your account and keep you logged in.</li>
+        <li>To email you a password reset link when you ask for one, and a notice when your password is changed.</li>
         <li>To take, show and manage your food orders and table bookings, including showing orders to the admin.</li>
         <li>To process deposits and refunds.</li>
         <li>To keep the site secure and working, for example rate limiting and debugging.</li>
       </ul>
-      <p>We do not sell your data, send marketing emails, or use advertising or analytics trackers.</p>
+      <p>We do not sell your data, send marketing emails (the only emails are password reset ones you ask for), or use advertising or analytics trackers.</p>
 
       <h2 class="h4 mt-4">4. Browser storage</h2>
       <p>The site stores three items in your browser's local storage: <code>biteRushToken</code> (your login token, valid for 7 days), <code>biteRushUser</code> (your name and email, so the page can greet you) and <code>biteRushCart</code> (your cart). We do not use tracking cookies. Logging out removes the login items, and you can clear all of them from your browser settings at any time.</p>
@@ -69,6 +70,7 @@
       <ul>
         <li><strong>Render</strong> hosts the website and the API.</li>
         <li><strong>MongoDB Atlas</strong> hosts the database.</li>
+        <li><strong>Brevo</strong> sends the password reset email. It receives your email address, name and the message.</li>
         <li><strong>Razorpay</strong> processes table deposits, online food payments and refunds (test mode).</li>
         <li><strong>jsDelivr</strong> serves Bootstrap and icon files, <strong>Google Fonts</strong> serves fonts, <strong>Google Maps</strong> shows the embedded map, and <strong>Unsplash</strong> and <strong>placehold.co</strong> serve images. Your browser contacts these services directly, so they may see your IP address.</li>
       </ul>

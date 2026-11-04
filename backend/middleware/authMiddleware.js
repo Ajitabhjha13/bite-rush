@@ -20,6 +20,11 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'User not found' });
       }
 
+      // A password reset logs out every device: tokens issued before the change are refused.
+      if (req.user.password_changed_at && decoded.iat < Math.floor(req.user.password_changed_at.getTime() / 1000)) {
+        return res.status(401).json({ message: 'Your password was changed. Please log in again.' });
+      }
+
       next();
     } catch (error) {
       return res.status(401).json({ message: 'Not authorized, invalid token' });

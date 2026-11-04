@@ -22,7 +22,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['customer', 'admin'],
     default: 'customer'
-  }
+  },
+  // Set when the password is reset. Login tokens issued before this moment stop working.
+  password_changed_at: { type: Date, default: null }
 }, {
   timestamps: true // adds createdAt and updatedAt automatically
 });
