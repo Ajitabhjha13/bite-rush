@@ -160,7 +160,7 @@ Behind Render and Cloudflare, `req.ip` can be a proxy. The limiter prefers the e
 Order lists fetch their line items with one `$in` query for the whole page instead of one query per order, and page sizes are capped on the server no matter what the client asks for.
 
 **Tests never touch real services.**
-The suite (179 tests) runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
+The suite (199 tests) runs against an in-memory MongoDB, never reads `.env`, and stubs the Razorpay client, so it is safe to run anywhere. GitHub Actions runs it on every push and pull request.
 
 ---
 
@@ -177,7 +177,8 @@ The suite (179 tests) runs against an in-memory MongoDB, never reads `.env`, and
 | **Payment integrity** | The deposit amount is decided on the server. Checkout signatures (HMAC) and Razorpay webhooks (raw-body signature, event-id de-duplication) are verified with constant-time comparison, and one code path confirms every payment. A refund is claimed atomically, so it cannot be issued twice. |
 | **Security headers** | `helmet` on the API (HSTS, `nosniff`, frame and referrer policies). The static frontend sends `X-Frame-Options`, `X-Content-Type-Options` and `Referrer-Policy` through Render's header rules. |
 | **CORS allowlist** | Only the deployed frontend and `localhost` / `127.0.0.1` may call the API from a browser. |
-| **Rate limiting** | `express-rate-limit`: 10 login/register attempts per 15 minutes per IP, 20 booking actions per 10 minutes per user, 600 requests per 15 minutes per IP overall. The signed Razorpay webhook is exempt. |
+| **Password reset** | The emailed token is 256 random bits, stored only as a SHA-256 hash, valid for 30 minutes and usable once (claimed atomically). The request endpoint answers the same for unknown emails, and resetting signs out every device that logged in before the change. |
+| **Rate limiting** | `express-rate-limit`: 10 login/register attempts and 10 password reset requests per 15 minutes per IP, 20 booking actions per 10 minutes per user, 600 requests per 15 minutes per IP overall. The signed Razorpay webhook is exempt. |
 | **Secrets management** | `JWT_SECRET`, `MONGO_URI` and the Razorpay keys live only in environment variables (`.env`, Render env vars). They are never committed, and `.env` is git-ignored. |
 
 ---
@@ -209,7 +210,7 @@ bite-rush/
 │   ├── routes/           # one file per module
 │   ├── middleware/       # authMiddleware, rateLimiters, validate
 │   ├── validators/       # one file per module
-│   ├── tests/            # Jest suites (120 tests)
+│   ├── tests/            # Jest suites (199 tests)
 │   └── server.js
 ├── frontend/
 │   ├── *.html            # index, menu, outlets, reserve, order, admin, login, register, privacy, terms
@@ -253,6 +254,10 @@ JWT_SECRET=your_long_random_secret
 RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
 RAZORPAY_KEY_SECRET=your_razorpay_test_key_secret
 RAZORPAY_WEBHOOK_SECRET=another_long_random_string
+# Password reset email via Brevo (optional; without it the reset link is printed in the server terminal)
+BREVO_API_KEY=xkeysib-xxxxxxxxxxxx
+MAIL_FROM=an_address_verified_in_brevo
+FRONTEND_URL=http://localhost:3000
 ```
 
 Create the 10 tables once, then run the automated tests any time:
@@ -280,6 +285,8 @@ Serve the `frontend/` folder with any static file server (for example VS Code's 
 |---|---|---|---|
 | POST | `/api/auth/register` | Public | Register a new user |
 | POST | `/api/auth/login` | Public | Log in, receive a JWT |
+| POST | `/api/auth/forgot-password` | Public | Email a reset link (same answer whether or not the email has an account) |
+| POST | `/api/auth/reset-password` | Public | Set a new password with the emailed token (single use, 30 minutes) |
 | GET | `/api/categories` | Public | List all categories |
 | GET | `/api/menu` | Public | List all available menu items |
 | GET | `/api/menu/category/:id` | Public | Filter menu items by category |
@@ -321,13 +328,14 @@ Paginated list endpoints return `{ items, total, page, limit, pages }`. Over-lim
 - [x] Order cancellation
 - [x] Self-hosted dish images
 - [x] Pagination on admin orders and menu, My Orders and My bookings
-- [x] Automated tests (Jest, Supertest, in-memory MongoDB, 120 tests) run on every push by GitHub Actions
+- [x] Automated tests (Jest, Supertest, in-memory MongoDB, 199 tests) run on every push by GitHub Actions
 - [x] Table booking with a Razorpay deposit (test mode), tiered refunds and an admin reservations grid
 - [x] Rate limiting, security headers and a CORS allowlist
 - [x] Delivery address, Vadodara pincode check and cash on delivery
 - [x] Privacy Policy and Terms pages
-- [ ] Online payment for food orders (Razorpay, test mode)
-- [ ] Live order status updates (server-sent events or WebSockets)
+- [x] Online payment for food orders (Razorpay, test mode)
+- [x] Live order status updates (server-sent events)
+- [x] Password reset by email (Brevo)
 - [ ] React Native mobile app using the existing REST API
 
 ---

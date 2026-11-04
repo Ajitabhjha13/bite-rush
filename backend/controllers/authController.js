@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const resets = require('../services/passwordResetService');
 
 // Generate JWT token
 const generateToken = (userId, role) => {
@@ -84,4 +85,27 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser };
+// @route   POST /api/auth/forgot-password
+// @desc    Email a reset link. The answer is the same whether or not the email has an account.
+const forgotPassword = async (req, res) => {
+  try {
+    await resets.requestReset(req.body.email);
+    res.status(200).json({ message: 'If that email has an account, a reset link is on its way. It works for 30 minutes.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/reset-password
+// @desc    Set a new password using the emailed token
+const resetPassword = async (req, res) => {
+  try {
+    await resets.resetPassword(req.body.token, req.body.password);
+    res.status(200).json({ message: 'Your password was changed. Please log in with the new one.' });
+  } catch (error) {
+    if (error instanceof resets.ResetError) return res.status(error.status).json({ message: error.message });
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = { registerUser, loginUser, forgotPassword, resetPassword };

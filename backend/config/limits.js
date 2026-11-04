@@ -3,6 +3,7 @@ const MIN = 60 * 1000;
 
 module.exports = {
   auth:    { windowMs: 15 * MIN, max: 10 },   // login + register, per IP (brute force)
+  forgot:  { windowMs: 15 * MIN, max: 10 },   // asking for / using a password reset link, per IP
   booking: { windowMs: 10 * MIN, max: 20 },   // hold / confirm / cancel, per user (or IP if no token)
   global:  { windowMs: 15 * MIN, max: 600 },  // everything else, per IP (admin tabs poll every 15-30s)
   pageSize: {

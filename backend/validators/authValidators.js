@@ -30,4 +30,21 @@ const loginValidation = [
     .notEmpty().withMessage('Password is required.')
 ];
 
-module.exports = { registerValidation, loginValidation };
+const forgotValidation = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required.')
+    .isEmail().withMessage('Enter a valid email address.')
+    .normalizeEmail()
+];
+
+const resetValidation = [
+  body('token')
+    .isString().withMessage('The reset link is not valid.').bail()
+    .matches(/^[a-f0-9]{64}$/).withMessage('The reset link is not valid.'),
+  body('password')
+    .isString().withMessage('Password is required.').bail()
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters.')
+];
+
+module.exports = { registerValidation, loginValidation, forgotValidation, resetValidation };
